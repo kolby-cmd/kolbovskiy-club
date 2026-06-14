@@ -69,7 +69,7 @@ export const kolbovskiyClubWebsite = {
   alternateName: ['KLB CLB', 'Колбовский клуб'],
   url: `${SITE_URL}/`,
   inLanguage: 'ru',
-  description: 'Публичный архив и авторский журнал Никиты Колбовского о технологиях, рынках, власти, культуре, путешествиях, визуальной среде и сбоях системы.',
+  description: 'Авторское издание Никиты Колбовского о реальном мире: технологиях, рынках, власти, культуре, архитектуре, путешествиях и сбоях системы.',
   genre: ['author media', 'public archive', 'journal'],
   creator: { '@id': KOLBOVSKIY_PERSON_ID },
   publisher: { '@id': KOLBOVSKIY_PERSON_ID },
@@ -86,7 +86,7 @@ export const baseEntityGraph = [
   kolbovskiyClubWebsite
 ];
 
-export const buildJsonLdGraph = (nodes: unknown | unknown[] = []) => {
+export const buildJsonLdGraph = (nodes = []) => {
   const normalizedNodes = Array.isArray(nodes) ? nodes : [nodes];
   return {
     '@context': 'https://schema.org',

@@ -8,6 +8,36 @@ const page = {
 };
 ---
 <SiteLayout title={page.seoTitle} description={page.description} canonical={page.canonical} ogType="website" current="archive">
+  <style slot="pageStyles" is:global>
+    .error-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 18px;
+      margin-top:clamp(28px,4vh,44px);
+      font-family:var(--font-ui);
+    }
+
+    .error-command{
+      display:inline;
+      color:var(--red);
+      font-family:var(--font-ui);
+      font-size:10px;
+      line-height:1.2;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      text-decoration:none;
+      transition:color var(--motion-ui) var(--ease), opacity var(--motion-ui) var(--ease);
+    }
+
+    .error-command:hover{
+      color:var(--black);
+    }
+
+    .error-command:focus-visible{
+      outline:1px solid var(--red);
+      outline-offset:4px;
+    }
+  </style>
   <main class="plain-page">
     <div class="plain-shell">
       <div class="plain-kicker"><span class="dot dot-pulse"></span><span>KOLBOVSKIY.CLUB · 404</span></div>
@@ -15,7 +45,7 @@ const page = {
       <div class="plain-text">
         <p>Такого входа в архив нет.</p>
         <p>Материал мог сменить адрес, утонуть в старой версии сайта или просто никогда не существовать.</p>
-        <p><a href="/archive/">В Бездну →</a></p>
+        <div class="error-actions"><a class="error-command" href="/archive/">[в бездну]</a></div>
       </div>
     </div>
   </main>

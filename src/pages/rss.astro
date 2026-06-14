@@ -4,7 +4,7 @@ import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_PERSON_ID } fr
 
 const siteUrl = 'https://kolbovskiy.club';
 const title = 'RSS — kolbovskiy.club';
-const description = 'RSS-лента kolbovskiy.club: машинная подписка на новые материалы архива.';
+const description = 'RSS-лента kolbovskiy.club: подписка на новые материалы.';
 const canonical = `${siteUrl}/rss/`;
 const feedUrl = `${siteUrl}/rss.xml`;
 
@@ -29,11 +29,7 @@ const jsonLd = buildJsonLdGraph({
 ---
 <SiteLayout title={title} description={description} canonical={canonical} current="" jsonLd={jsonLd}>
   <style slot="pageStyles" is:global>
-    .rss-page .plain-title{
-      font-size:clamp(72px,12vw,164px);
-    }
-
-    .rss-actions{
+.rss-actions{
       display:flex;
       flex-wrap:wrap;
       gap:10px 18px;
@@ -41,7 +37,8 @@ const jsonLd = buildJsonLdGraph({
       font-family:var(--font-ui);
     }
 
-    .rss-action{
+    .rss-command{
+      display:inline;
       border:0;
       background:transparent;
       padding:0;
@@ -53,19 +50,20 @@ const jsonLd = buildJsonLdGraph({
       text-transform:uppercase;
       text-decoration:none;
       cursor:pointer;
-      transition:color var(--motion-ui) var(--ease),opacity var(--motion-ui) var(--ease);
+      transition:color var(--motion-ui) var(--ease), opacity var(--motion-ui) var(--ease);
     }
 
-    .rss-action:hover{
+    .rss-command:hover{
       color:var(--black);
     }
 
-    .rss-action:focus-visible{
+    .rss-command:focus-visible{
       outline:1px solid var(--red);
       outline-offset:4px;
     }
 
     .rss-note{
+      max-width:720px;
       margin-top:clamp(24px,3.5vh,38px);
       color:var(--gray);
       font-family:var(--font-ui);
@@ -76,7 +74,7 @@ const jsonLd = buildJsonLdGraph({
 
   <main class="plain-page rss-page">
     <section class="plain-shell">
-      <div class="plain-kicker"><span>служебный канал</span><span>RSS / XML</span></div>
+      <div class="plain-kicker"><span class="dot dot-pulse"></span><span>KOLBOVSKIY.CLUB · RSS / XML</span></div>
       <h1 class="plain-title">RSS</h1>
 
       <div class="plain-text">
@@ -84,8 +82,8 @@ const jsonLd = buildJsonLdGraph({
       </div>
 
       <div class="rss-actions" aria-label="Действия RSS">
-        <button class="rss-action" type="button" data-copy-rss="[скопировать rss ссылку]" data-copied-rss="[ссылка скопирована]">[скопировать rss ссылку]</button>
-        <a class="rss-action" href="/archive/">[в архив]</a>
+        <button class="rss-command" type="button" data-copy-rss>[скопировать rss ссылку]</button>
+        <a class="rss-command" href="/archive/">[в архив]</a>
       </div>
 
       <p class="rss-note">Чтобы подписаться, скопируйте RSS-ссылку и добавьте её в свою RSS-читалку.</p>
@@ -98,13 +96,14 @@ const jsonLd = buildJsonLdGraph({
       if (!button) return;
 
       const feedUrl = 'https://kolbovskiy.club/rss.xml';
-      const initial = button.getAttribute('data-copy-rss') || '[скопировать rss ссылку]';
-      const copied = button.getAttribute('data-copied-rss') || '[ссылка скопирована]';
+      const initial = '[скопировать rss ссылку]';
+      const copied = '[ссылка скопирована]';
+      const failed = '[не скопировалось]';
 
       async function copyText(value){
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(value);
-          return true;
+          return;
         }
 
         const area = document.createElement('textarea');
@@ -114,24 +113,21 @@ const jsonLd = buildJsonLdGraph({
         area.style.left = '-9999px';
         document.body.appendChild(area);
         area.select();
-        const ok = document.execCommand('copy');
+        document.execCommand('copy');
         document.body.removeChild(area);
-        return ok;
       }
 
       button.addEventListener('click', async () => {
         try {
           await copyText(feedUrl);
           button.textContent = copied;
-          window.setTimeout(() => {
-            button.textContent = initial;
-          }, 1600);
         } catch {
-          button.textContent = '[не скопировалось]';
-          window.setTimeout(() => {
-            button.textContent = initial;
-          }, 1600);
+          button.textContent = failed;
         }
+
+        window.setTimeout(() => {
+          button.textContent = initial;
+        }, 1600);
       });
     })();
   </script>
