@@ -10,7 +10,8 @@ const staticPages = [
   { path: '/rubrics/', priority: '0.8', changefreq: 'monthly' },
   { path: '/best/', priority: '0.8', changefreq: 'monthly' },
   { path: '/about/', priority: '0.6', changefreq: 'yearly' },
-  { path: '/privacy-policy/', priority: '0.3', changefreq: 'yearly' }
+  { path: '/privacy-policy/', priority: '0.3', changefreq: 'yearly' },
+  { path: '/rss/', priority: '0.4', changefreq: 'yearly' }
 ];
 
 const escapeXml = (value = '') => String(value)
