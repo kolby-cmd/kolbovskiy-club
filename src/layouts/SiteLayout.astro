@@ -14,19 +14,6 @@ const {
   ogImage = null
 } = Astro.props;
 
-const SITE_URL = 'https://kolbovskiy.club';
-const DEFAULT_OG_IMAGE = '/og/kolbovskiy-club.jpg';
-const absoluteUrl = (value: string | null | undefined) => {
-  if (!value) return null;
-  try {
-    return new URL(value, SITE_URL).toString();
-  } catch {
-    return null;
-  }
-};
-const canonicalUrl = absoluteUrl(canonical) ?? SITE_URL;
-const metaOgImage = absoluteUrl(ogImage ?? DEFAULT_OG_IMAGE);
-
 const stripHtml = (value = '') => String(value)
   .replace(/<br\s*\/?>/gi, ' ')
   .replace(/<[^>]+>/g, ' ')
@@ -70,26 +57,18 @@ const searchSuggestions = searchIndex.slice(0, 5);
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#E6E2D6" />
-  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta name="author" content="Nikita Kolbovskiy" />
-  <link rel="author" href="https://kolbovskiy.com/" />
-  <link rel="me" href="https://kolbovskiy.com/" />
-  <link rel="me" href="https://kolbovskiy.pics/" />
-  <link rel="me" href="https://t.me/klb_clb" />
-  <link rel="canonical" href={canonicalUrl} />
-  <link rel="alternate" type="application/rss+xml" title="kolbovskiy.club RSS" href="https://kolbovskiy.club/rss.xml" />
+  <link rel="canonical" href={canonical} />
   <meta property="og:type" content={ogType} />
   <meta property="og:site_name" content="kolbovskiy.club" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:url" content={canonicalUrl} />
-  <meta property="og:locale" content="ru_RU" />
-  {metaOgImage ? <meta property="og:image" content={metaOgImage} /> : null}
+  <meta property="og:url" content={canonical} />
+  {ogImage ? <meta property="og:image" content={ogImage} /> : null}
   <meta name="twitter:card" content="summary_large_image" />
-  {metaOgImage ? <meta name="twitter:image" content={metaOgImage} /> : null}
+  {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
   {jsonLd ? <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script> : null}
@@ -200,7 +179,6 @@ const searchSuggestions = searchIndex.slice(0, 5);
     .search-triangle{display:block;width:16px;height:16px;background:var(--red);clip-path:polygon(0 0,100% 50%,0 100%);transition:transform var(--motion-hover) var(--ease),opacity var(--motion-ui) var(--ease);opacity:.86}
     .search-result:hover .search-triangle{transform:translateX(7px);opacity:1}
     .search-empty{padding:18px 0;border-bottom:1px solid rgba(240,237,230,.18);color:rgba(240,237,230,.55);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-
 
 
     /* Plain service pages: about / disclaimer */

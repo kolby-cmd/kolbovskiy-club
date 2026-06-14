@@ -97,8 +97,6 @@ const heroToneVars = (article) => {
 };
 
 
-
-
 const featuredArticle = bySlug['edge-of-the-world-4k'] ?? bySlug['genius-act-1'] ?? byDateDesc[0];
 const heroTitle = featuredArticle.title.toUpperCase().replace(/\s+/g, '\u00A0');
 const heroCaptionHtml = [featuredArticle.deckHtml, featuredArticle.description].filter(Boolean).join('<br>');
@@ -158,6 +156,7 @@ const rubricCards = rubricConfigs
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#E6E2D6" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <title>{siteTitle}</title>
   <meta name="description" content={siteDescription} />
@@ -979,7 +978,6 @@ const rubricCards = rubricConfigs
     }
 
 
-
     /* AUDIT PASS 25 — INDEX MICROFIXES
        Mobile menu safe-area, hero rail length, archive/best triangle animation lock. */
     @media(max-width:760px){
@@ -1099,7 +1097,6 @@ const rubricCards = rubricConfigs
         min-width:46px!important;
       }
     }
-
 
 
     /* AUDIT PASS 28 — MOBILE SAFE AREA LOCK
