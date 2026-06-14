@@ -1,0 +1,1505 @@
+---
+import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_PERSON_ID } from '../data/siteEntity';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { articles } from '../data/articles';
+
+const pageTitle = 'Колба — Greatest Hi[ea]ts kolbovskiy.club';
+const pageDescription = 'Колба: дистилляты лучших материалов kolbovskiy.club, периодические выпуски Greatest Hi[ea]ts и ручные подшивки текстов по внутренней связи.';
+const pageCanonical = 'https://kolbovskiy.club/best/';
+const pageOgImage = '/images/best/GH_cv_003.jpg';
+
+const articleList = articles.filter(Boolean);
+const bySlug = Object.fromEntries(articleList.map((article) => [article.slug, article]));
+
+const slugFromHref = (href = '') => {
+  const match = String(href).match(/\/txt\/([^/]+)\/?/);
+  return match?.[1] ?? '';
+};
+
+const articleTitle = (href = '', fallback = '') => {
+  const slug = slugFromHref(href);
+  return bySlug[slug]?.title ?? fallback;
+};
+
+const formatInline = (value = '') => {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/&lt;(\/?)(s|del)&gt;/gi, '<$var(--motion-word)>')
+    .replace(/&lt;(\/?)(em|i)&gt;/gi, '<$1em>')
+    .replace(/~~([^~]+)~~/g, '<s>$1</s>');
+};
+
+const featured = {
+  id: 'greatest-hieats-03',
+  issue: 'Greatest Hi[ea]ts, vol. 03',
+  season: 'Season II, Q1',
+  title: 'Первый квартал второго сезона',
+  date: '2026',
+  count: '11',
+  coverImage: '/images/best/GH_cv_003.jpg',
+  lead: 'Без прелюдий, лучшее за первый квартал второго сезона в канальном летоисчислении. Летняя легкость сменилась осенней реальностью. Кровавые банкиры выползли из застрех, экономика коллапсирует, игра усложняется, скучать некогда — всё как мы любим.',
+  sides: [
+    {
+      name: 'Side A. <em>Out</em>',
+      items: [
+        { no: '01', title: 'Акт Гения, сценарии обнуления', note: 'Бывш. гегемон стремится обнулить долги о своих же кредиторов. В трёх частях, and counting.', rubrics: 'МЛРМ', readTime: 'лонгрид', href: '/txt/genius-act-1/', extraHref: 'https://t.me/klb_clb/97' },
+        { no: '02', title: 'Футурологический конгресс', note: 'Ещё одна трилогия. Коллективный опыт с живым футурологом в смелой попытке заглянуть в будущее.', rubrics: 'WIMM', readTime: 'трилогия', href: '/txt/futurological-congress-1/' },
+        { no: '03', title: 'Ликвидация жадности', note: 'Шок-контент: некоторые механизмы работы бирж и нулевые шансы «разумных» инвесторов.', rubrics: 'МЛРМ', readTime: 'лонгрид', href: '/txt/liquidation-of-greed/' }
+      ]
+    },
+    {
+      name: 'Side B. <em>Inside</em>',
+      items: [
+        { no: '04', title: 'Аляска', note: 'Большая политика переплетается с личными галлюцинациями Редакции. Последняя <em>снова угадывает.</em>', rubrics: 'МЛРМ', readTime: 'связка', href: '/txt/alaska/', extraHref: 'https://t.me/klb_clb/96' },
+        { no: '05', title: 'Цена картинки', note: 'Редакция выбирает галстук Владимиру Владимировичу.', rubrics: 'КРАСИВОЕ', readTime: 'эссе', href: '/txt/price-of-the-image/' },
+        { no: '06', title: 'Думай, что в стакане вода', note: 'Павел Дуров натирает мозоли крестом Телеграма.', rubrics: 'МЛРМ', readTime: 'эссе', href: '/txt/think-there-is-water/' }
+      ]
+    },
+    {
+      name: 'На ребре. <em>Искусство в долгу</em>',
+      items: [
+        { no: '07', title: 'Рэдиссон блю', note: 'Редакционный инсайд — экскурсия в архвиз, одну из основных профессий нашего арт-дира.', rubrics: 'КРАСИВОЕ', readTime: 'инсайд', href: '/txt/radisson-blu/' },
+        { no: '08', title: 'F-1', note: 'Бред Питт оформляет тупой маскулинный летний блокбастер. Очень хорошо!', rubrics: 'КРАСИВОЕ', readTime: 'кино', href: '/txt/f1/' },
+        { no: '09', title: '28 лет спустя', note: 'Креаторы <em>опять</em> проигрывают битву с жадностью. Помянем.', rubrics: 'КРАСИВОЕ', readTime: 'кино', href: '/txt/28-years-later/' }
+      ]
+    },
+    {
+      name: '<em>Bonus-tracks</em>',
+      lead: 'Ничего смешного в этот раз, <em>увы.</em> Целый квартал плотных, наваристых лонгридов. <em>Посему,</em> на вкладыше записано воздушное, пришедшее внезапно и внезапно ускользнувшее.',
+      items: [
+        { no: '10', title: 'Границы дозволенного', note: 'Штрих об информационной гигиене, так необходимой ув. Читателям.', rubrics: 'НАМОЛНИИ', readTime: 'штрих', href: '/txt/limits-of-permission/' },
+        { no: '11', title: 'Вечерняя шифровка', note: 'Об исчезающей романтике шифропанка. Регуляция идёт.', rubrics: 'WIMM', readTime: 'шифр', href: '/txt/evening-cipher/' }
+      ]
+    }
+  ],
+  outroStart: 'Традиционно, Редакция выражает искреннюю благодарность ув. Подписчикам, ветеранам и вновь примкнувшим. Медленно, но верно, мы растём и даже находим силы и время на что-то новое. Напоминаем, в этом квартале у Издания появился ',
+  outroMiddle: ' и бог знает куда ещё приведет эта тропа. ',
+  outroEnd: ' нет, но, судя по непоследним событиям, вряд ли им хоть кто-то обладает.'
+};
+
+const albums = [
+  featured,
+  {
+    id: 'greatest-hieats-02',
+    issue: 'Greatest Hi[ea]ts, vol. 02',
+    season: 'Год',
+    title: 'Каналу год',
+    date: '2025',
+    count: '11',
+    coverImage: '/images/best/GH_cv_002.jpg',
+    lead: 'Каналу год, ув. Друзья. Редакция празднует: по случаю отпечатан новый сборник хитов.',
+    body: [
+      'Каналу год, ув. Друзья! Редакция празднует! По случаю отпечатан новый сборник хитов.',
+      'Кому-то может быть жаль, что Рептилоиды в четвёртом квартале /в канальном летоисчислении/ забились в прохладные расщелины и уступили место другим интересам. Ничего не могу поделать — погода шепчет. Однако, не переживайте — впереди насыщенная программа Дрожи Земли, и ящеры ещё дадут о себе знать, во весь р[хв]ост, мимо не пройдём.',
+      'А пока, в этот жаркий безмятежный выходной предлагаем пробежаться по лучшим, по мнению редакции, /мы вертели TGStat/ материалам.'
+    ],
+    sides: [
+      {
+        name: 'Side A. <em>Out</em>',
+        items: [
+          { no: '01', title: 'Лебедьрак Ищука, ep. 2.0. Каждый охотник желает знать', note: 'Очередной эпизод сериала. Айдентика как лёгкий разведпризнак; сборник книг по теме. /Осторожно, шиза/!', rubrics: 'WIMM', readTime: 'сериал', href: '/txt/lebedrak-ishuka-2/' },
+          { no: '02', title: 'Информация + Закатное', note: 'Базовая база по работе с восприятием любой, спустившейся к нам «новости» + книга о неочевидных источниках дополнительных красок на холсте реальности.', rubrics: 'МЛРМ', readTime: 'связка', href: '/txt/information/', extraHref: '/txt/zakatnoe/', extraLabel: 'закатное' },
+          { no: '03', title: 'Чай со слоном', note: 'Духовные тоже плачут. Краткая военно-историческая справка по самому мирному и чистому помыслами /в общественном сознании/ региону.', rubrics: 'WAYAWAY', readTime: 'справка', href: '/txt/tea-with-elephant/' }
+        ]
+      },
+      {
+        name: 'Side B. <em>Inside</em>',
+        items: [
+          { no: '04', title: 'Положи камень', note: 'Кому отдаться, чтобы <em>точно</em> не прогадать.', rubrics: 'МЛРМ', readTime: 'формула', href: '/txt/put-the-stone/' },
+          { no: '05', title: 'Шесть цапель', note: 'Гениальный алкаш раздаёт стиля на письме.', rubrics: 'КРАСИВОЕ', readTime: 'литература', href: '/txt/six-herons/' },
+          { no: '06', title: 'Шабаш', note: 'Великие музыканты подхватывают и взлетают на бешеной коде, каждый своей.', rubrics: 'КРАСИВОЕ', readTime: 'музыка', href: '/txt/shabash/' }
+        ]
+      },
+      {
+        name: 'На ребре. <em>Искусство в долгу</em>',
+        items: [
+          { no: '07', title: 'Юстас', note: 'Советский развед-эпик в 12 эпизодах, что год от года не теряет актуальности.', rubrics: 'КРАСИВОЕ', readTime: 'сериал', href: '/txt/yustas/' },
+          { no: '08', title: 'Родина', note: 'Восемь остросюжетных сезонов особенностей американской разведки.', rubrics: 'КРАСИВОЕ', readTime: 'сериал', href: '/txt/homeland/' },
+          { no: '09', title: 'Perfectionism Inc.', note: 'Когда перфекционизм — не пошлый диагноз, а средство высоких достижений. Обстоятельный рассказ об одном из любимых фотографов и ворох дополнительных материалов.', rubrics: 'КРАСИВОЕ', readTime: 'фотография', href: '/txt/perfectionism-inc/' }
+        ]
+      },
+      {
+        name: '<em>Bonus-tracks</em>',
+        lead: 'Традиционный юмористический <s>сквозь слёзы</s> вкладыш — такой, меньшего диаметра, на прозрачной плёнке.',
+        items: [
+          { no: '10', title: 'На износ', note: 'Вечный сюжет о том, как жажда наживы угрожает средствам производства.', rubrics: 'МЛРМ', readTime: 'штрих', href: '/txt/na-iznos/' },
+          { no: '11', title: 'Каба', note: 'Пенсионная пастораль о предполагаемой счастливой старости здорового шизоида.', rubrics: 'WIMM', readTime: 'пастораль', href: '/txt/kaba/' }
+        ]
+      }
+    ],
+    notes: [
+      {
+        title: 'Техническое',
+        text: 'Постов опубликовано — 74. Средний темп публикаций — 1,5 поста в неделю. Средний объем материала — 3,7k знаков. Количество читателей — 247. Усилий по раскрутке затрачено — 0. Куплено рекламных постов в других каналах — 2. Пришло «платных» подписчиков — 1. Продано рекламных постов — 1. Баланс — околонулевой плюсовой. Итого, канал по-прежнему остаётся некоммерческим творческим проектом редакции и финансируется из других доходов авторов.'
+      },
+      {
+        title: 'Неочевидная польза',
+        text: 'Зачем всё это? <s>Во-первых, это красиво.</s> Есть скромное предположение, что в Светлом Мире Наступившего Будущего бизнесы и индивиды, не успевшие вовремя в клуб <em>трёх и более</em> запятых /<em>т. е. почти все</em>/ будут поставлены в условия куда более жёсткой коленно-локтевой конкуренции и, при прочих равных, а иногда и без, т. н. «медийность» станет одним из бонусов к общему рейтингу бренда/бипеда. На собственной шкуре замечено <em>пока</em> не было. При новых рисках нет <em>почти</em> никаких новых бенефитов, наблюдаем, однако. В-главных, нам просто в кайф. Некоторые авторы писали ещё во времена ЖЖ.'
+      },
+      {
+        title: 'За сим',
+        text: 'Всех с праздником! Спасибо, что читаете. Знаем, кто-то тут с самого начала. Лучший способ отблагодарить и поздравить редакцию — поделиться каким-нибудь материалом, сопроводив сообщение комментом в духе: «Ой, девочки /и мальчики!/ тут ТАКОЕ!» — у себя в сетях или лс. Всё есть, всё будет, <em>я узнавал.</em>'
+      }
+    ]
+  },
+  {
+    id: 'greatest-hieats-01',
+    issue: 'Greatest Hi[ea]ts, vol. 01',
+    season: 'Три квартала',
+    title: 'Сюжетики ого-го, как у A24',
+    date: '2025',
+    count: '12',
+    coverImage: '/images/best/GH_cv_001.jpg',
+    lead: 'Каналу 3 квартала — время родить новый сборник хитов. Сюжетики ого-го, как у A24.',
+    body: [
+      'Каналу 3 квартала — время родить новый сборник хитов. Первый был аж в ноябре, с тех пор скопилось! Даже не знаю, можно ли желать более насыщенного времечка для наших скромных земных воплощений. Но кто дышит глубоко и <s>хладнокровно</s> — тот спокоен. Судя по количеству — тут все такие, либо стремящиеся. <em>Посему,</em> поехали!'
+    ],
+    sides: [
+      {
+        name: 'Side A. <em>Out</em>',
+        items: [
+          { no: '01', title: 'Лебедьрак Ищука, ep. 1.0. Трансгуманизм, Inc', note: 'Очередной эпизод сериального эпика. Пара месяцев прошла, основные адепты, Дональд и Илон, уже взошли на арену во всей неистовости.', rubrics: 'МЛРМ', readTime: 'сериал', href: '/txt/lebedrak-ishuka-1/' },
+          { no: '02', title: 'Преждевременные сарказмы', note: 'Почему BTC по 100 и даже по млн. — не повод для эйфории.', rubrics: 'МЛРМ', readTime: 'крипто', href: '/txt/premature-sarcasms/' },
+          { no: '03', title: 'Чей Тайвань?', note: 'Опыты с ИИ в разных сферах, выводы.', rubrics: 'МЛРМ', readTime: 'ИИ', href: '/txt/whose-taiwan/' }
+        ]
+      },
+      {
+        name: 'Side B. <em>Inside</em>',
+        items: [
+          { no: '04', title: 'Страшная Сила', note: 'Размышления об одной из базовых ценностей человека — Красоте. Спойлер: самоценна.', rubrics: 'КРАСИВОЕ', readTime: 'эссе', href: '/txt/scary-force/' },
+          { no: '05', title: 'Закорючки', note: 'На полях блокчейна. Всё могло пойти хорошо, вышло как обычно, но в этом есть свой кайф.', rubrics: 'КРАСИВОЕ', readTime: 'блокчейн', href: '/txt/zakoryuchki/' },
+          { no: '06', title: 'Shutdown /r', note: 'Новогодние мантры. Судя по количеству пересылок, пригодятся круглый год.', rubrics: 'WIMM', readTime: 'мантры', href: '/txt/shutdown-r/' }
+        ]
+      },
+      {
+        name: 'На ребре. <em>Искусство в долгу</em>',
+        items: [
+          { no: '07', title: 'Миллиарды пахнут прериями', note: '4k знаков про один из любимых сериалов.', rubrics: 'КРАСИВОЕ', readTime: 'сериал', href: '/txt/billions-prairies/' },
+          { no: '08', title: 'Агентство охуительных историй', note: '«Мягкая сила» пропаганды США в действии, с лёгким разбором идиотии и маразмов.', rubrics: 'КРАСИВОЕ', readTime: 'кино', href: '/txt/agency-of-stories/' },
+          { no: '09', title: 'Хорошая', note: 'Третий пост про кино о свежем /относительно/ клипе с еще более свежей Николь Кидман.', rubrics: 'КРАСИВОЕ', readTime: 'клип', href: '/txt/khoroshaya/' }
+        ]
+      },
+      {
+        name: '<em>Bonus-tracks</em>',
+        lead: 'Традиционная приправа в виде смеха <s>сквозь слёзы</s>.',
+        items: [
+          { no: '10', title: 'В каждой шутке есть доля', note: 'Трансгуманизм постучал ко всем, включая тех, кто о нём не знает.', rubrics: 'НАМОЛНИИ', readTime: 'шутка', href: '/txt/joke-share/' },
+          { no: '11', title: 'Недолго музыка', note: 'Малозаметные курьёзы на инаугурации чужого президента.', rubrics: 'НАМОЛНИИ', readTime: 'штрих', href: '/txt/music-ended/' },
+          { no: '12', title: 'Освободите Вилли', note: 'Культурный водопроводчик поясняет за искусство <s>и жизнь вообще</s>.', rubrics: 'КРАСИВОЕ', readTime: 'искусство', href: '/txt/free-willy/' }
+        ]
+      }
+    ],
+    notes: [
+      {
+        title: 'От редакции',
+        text: 'Спасибо, что задаёте вопросы в лс, приятно их получать и отвечать. Именно с этим расчётом в канале с самого начала отключены комментарии. «Болтун — находка для шпиона» — говорила мне бабушка. Реакции также выпилены и вряд ли вернутся. Во-первых, они все уродские, а во-вторых — я фанат крайне сложного дофамина. Кому совсем хочется меня подбодрить — это можно сделать <s>рублём</s> звездой или бесплатно — моим логотипом — он прекрасен по определению и смотрится яркой точкой в конце любой мысли.'
+      },
+      {
+        title: 'Канал',
+        text: 'Канал — по-прежнему моя отдушина и лучший некоммерческий проект. За всё это время я не выпустил ни одного халтурного поста, но и страданий с ними никогда нет: всегда на кураже, даже если грустно или задумчиво. Спасибо, что читаете и делитесь! {Это, как минимум, говорит о вашем вкусе /и моей скромности/}.'
+      }
+    ]
+  },
+  {
+    id: 'greatest-hieats-00',
+    issue: 'Greatest Hi[ea]ts, vol. 00',
+    season: 'Mini-LP',
+    title: 'Наконец, накопил',
+    date: '2024',
+    count: '07',
+    coverImage: '/images/best/GH_cv_000.jpg',
+    lead: 'Первый mini-LP лучших хитов: рыночек, программные сериалы, SIGGRAPH, самоопределение и raw-юмор сквозь слёзы.',
+    body: [
+      'Радостью сообщаю, что за истекший период недельной медийной абстиненции мое скромное издание обогнало «цифровое золото», органически преодолев важную отметку в 100, и уверенно подбирается к новому ATH в 200 читателей. В связи с этими непоследними событиями редакция в лице ув. Меня выражает сердечную благодарность ув. Вам и выпускает первый mini-LP лучших хитов.'
+    ],
+    sides: [
+      {
+        name: 'Side A. <em>Out</em>',
+        items: [
+          { no: '01', title: 'Это Буллран', note: 'Рыночек, но не только. Самый свежий и пока единственный трек, про который мне писали <em>извне</em> (понравился). А казалось бы. Я еще и сотой доли взгляда на предмет не изложил. <em>Stay tuned.</em>', rubrics: 'МЛРМ', readTime: 'рынки', href: '/txt/bullrun/' },
+          { no: '02', title: 'Лебедьрак Ищука, ep. 0', note: 'Пилотный эпизод большого «программного» сериала на основе реальных событий и собственных изысканий. Мировые проекты на <s>великой шахматной доске</s> за карточным столом Истории очень крупными мазками. <em>Скоро новые серии.</em>', rubrics: 'МЛРМ', readTime: 'пилот', href: '/txt/lebedrak-ishuka-0/' }
+        ]
+      },
+      {
+        name: 'Side B. <em>Inside</em>',
+        items: [
+          { no: '03', title: 'Chomo Orchestra', note: 'Эго тельца бьет копытом в грудь (редко). Как заниматься всем <s>подряд</s>, не привлекая внимания санитаров. Тем, кто в самом начале и сомневается. <em>Спойлер — не сомневайтесь!</em>', rubrics: 'WIMM', readTime: 'самоопределение', href: '/txt/homo-orchestra/' },
+          { no: '04', title: 'SIGGRAPH 24', note: 'Красивое — картинки (мои) с выставки в Денвере.', rubrics: 'КРАСИВОЕ', readTime: 'выставка', href: '/txt/siggraph-24/' }
+        ]
+      },
+      {
+        name: '<em>Bonus-tracks</em>',
+        lead: '<em>В каждой шутке есть доля шутки</em> — всякое веселое, на чем отдыхаю. <em>Raw-формат</em> проецируется на мою сетчатку с обратной стороны сразу цельным куском текста, не редактируется.',
+        items: [
+          { no: '05', title: 'Черта характера', note: 'Короткий raw-этюд о том, как личная деформация внезапно оказывается не дефектом, а рабочим способом держаться в реальности.', rubrics: 'НАМОЛНИИ', readTime: 'raw', href: '/txt/character-trait/' },
+          { no: '06', title: 'Осенняя профориентация', note: 'Профориентационный приступ на стыке усталости, самоиронии и взрослого вопроса: чем вообще заниматься, если обычные ответы уже не работают.', rubrics: 'WIMM', readTime: 'raw', href: '/txt/autumn-career-guidance/' },
+          { no: '07', title: 'Невольные свидетельства', note: 'Маленькая фиксация чужих симптомов времени: смешно ровно до момента, когда понимаешь, что свидетельства обычно невольные у всех.', rubrics: 'НАМОЛНИИ', readTime: 'raw', href: '/txt/involuntary-testimonies/' }
+        ]
+      }
+    ]
+  }
+];
+
+const otherAlbums = albums.slice(1);
+const jsonLd = buildJsonLdGraph({
+  '@type': 'CollectionPage',
+  '@id': `${pageCanonical}#webpage`,
+  name: pageTitle,
+  description: pageDescription,
+  url: pageCanonical,
+  inLanguage: 'ru',
+  isPartOf: { '@id': KOLBOVSKIY_CLUB_WEBSITE_ID },
+  author: { '@id': KOLBOVSKIY_PERSON_ID },
+  publisher: { '@id': KOLBOVSKIY_PERSON_ID },
+  image: `https://kolbovskiy.club${pageOgImage}`,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: albums.length,
+    itemListElement: albums.map((album, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: `${album.issue} — ${album.title}`,
+      url: `${pageCanonical}#${album.id}`
+    }))
+  }
+});
+---
+
+<SiteLayout title={pageTitle} description={pageDescription} canonical={pageCanonical} ogImage={pageOgImage} current="best" jsonLd={jsonLd}>
+  <main class="best-page">
+    <section class="best-hero" aria-labelledby="best-title">
+      <div class="best-hero-top">
+        <div class="best-brow"><span class="dot dot-pulse"></span><span>Greatest Hi[ea]ts</span></div>
+        <h1 id="best-title" class="best-title">колба</h1>
+      </div>
+      <div class="best-hero-bottom">
+        <p class="best-lede">Дистилляты лучших материалов. Периодические выпуски, ручные подшивки текстов по внутренней связи. Альбомы из наблюдений, рынков, городов, дизайна и сбоев Реального мира.</p>
+        <aside class="best-counter" aria-label="Счётчик выпусков">
+          <span class="best-counter-label">выпусков</span>
+          <span class="best-counter-num">04</span>
+          <span class="best-counter-sub">колба</span>
+        </aside>
+      </div>
+    </section>
+
+    <section class="featured-album" id={featured.id} aria-labelledby="featured-title">
+      <div class="featured-grid">
+        <figure class="album-cover album-cover--large album-cover--image cover-03" aria-label="Обложка сборника">
+          <img src={featured.coverImage} alt="" loading="eager" decoding="async" />
+        </figure>
+
+        <article class="album-main album-main--featured">
+          <div class="album-meta"><span>{featured.issue}</span><span>{featured.season}</span><span>{featured.date}</span></div>
+          <div class="album-title-row">
+            <h3 id="featured-title">{featured.title}</h3>
+            <span class="album-count"><b>{featured.count}</b><span>материалов</span></span>
+          </div>
+          <p set:html={formatInline(featured.lead)}></p>
+
+          <div class="side-list">
+            {featured.sides.map((side) => (
+              <section class="album-side">
+                <h4 set:html={formatInline(side.name)}></h4>
+                {side.lead && <p class="side-lead" set:html={formatInline(side.lead)}></p>}
+                <div class="tracklist">
+                  {side.items.map((item) => (
+                    <>
+                      <a
+                        class="track-row"
+                        href={item.href}
+                        target={item.href.startsWith('http') ? '_blank' : undefined}
+                        rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                      >
+                        <span class="track-no">{item.no}</span>
+                        <span class="track-title"><b>{articleTitle(item.href, item.title)}</b><em set:html={formatInline(item.note)}></em></span>
+                        <span class="track-rubrics">{item.rubrics}</span>
+                        <span class="track-time">{item.readTime}</span>
+                        <span class="track-go" aria-hidden="true"></span>
+                      </a>
+                      {item.extraHref && (
+                        <a class="track-extra" href={item.extraHref} target="_blank" rel="noreferrer">
+                          {item.extraLabel || 'продолжение'}
+                        </a>
+                      )}
+                    </>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          <div class="featured-album-outro">
+            <p>
+              {featured.outroStart}<a href="https://kolbovskiy.club/" target="_blank" rel="noreferrer">отдельный нарядный сайт</a>{featured.outroMiddle}<em><a href="https://youtu.be/aWhRXnnETQo?si=IoGU2kwqbZYc8TeL" target="_blank" rel="noreferrer">Руля, как такового,</a>{featured.outroEnd}</em>
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="album-archive" aria-labelledby="album-archive-title">
+      <div class="best-section-head best-section-head--archive">
+        <div>
+          <h2 id="album-archive-title">Все выпуски</h2>
+          <p>Архив выпусков «Колбы»: квартальные и полевые дистилляты, собранные вручную.</p>
+        </div>
+        <button class="expand-all" type="button" data-expand-albums>[Развернуть все]</button>
+      </div>
+
+      <div class="album-details-list">
+        {otherAlbums.map((album, index) => (
+          <details class="album-detail" id={album.id}>
+            <summary>
+              <span class={`album-cover album-cover--small ${album.coverImage ? 'album-cover--image' : ''} cover-0${2 - index}`} aria-hidden="true">
+                {album.coverImage ? (
+                  <img src={album.coverImage} alt="" loading="lazy" decoding="async" />
+                ) : (
+                  <span class="cover-tag">GH-{String(2 - index).padStart(2, '0')}</span>
+                )}
+              </span>
+              <span class="summary-main">
+                <span class="summary-issue">{album.issue} · {album.season}</span>
+                <b>{album.title}</b>
+                <em set:html={formatInline(album.lead)}></em>
+              </span>
+              <span class="summary-count"><b>{album.count}</b><span>материалов</span></span>
+              <span class="summary-mark" aria-hidden="true"></span>
+            </summary>
+            <div class="detail-body featured-grid">
+              <figure class={`album-cover album-cover--large ${album.coverImage ? 'album-cover--image' : ''} cover-0${2 - index}`} aria-label={`Обложка ${album.issue}`}>
+                {album.coverImage ? (
+                  <img src={album.coverImage} alt="" loading="lazy" decoding="async" />
+                ) : (
+                  <>
+                    <span class="cover-tag">GH-{String(2 - index).padStart(2, '0')}</span>
+                    <span class="cover-name">Greatest<br />Hi[ea]ts</span>
+                    <span class="cover-season">{album.season}</span>
+                  </>
+                )}
+              </figure>
+
+              <article class="album-main">
+                <div class="album-meta"><span>{album.issue}</span><span>{album.season}</span><span>{album.date}</span></div>
+                <div class="album-title-row">
+                  <h3>{album.title}</h3>
+                  <span class="album-count"><b>{album.count}</b><span>материалов</span></span>
+                </div>
+                {album.body ? (
+                  <div class="album-copy">
+                    {album.body.map((paragraph) => <p set:html={formatInline(paragraph)}></p>)}
+                  </div>
+                ) : (
+                  <p set:html={formatInline(album.lead)}></p>
+                )}
+
+                {album.sides ? (
+                  <div class="side-list">
+                    {album.sides.map((side) => (
+                      <section class="album-side">
+                        <h4 set:html={formatInline(side.name)}></h4>
+                        {side.lead && <p class="side-lead" set:html={formatInline(side.lead)}></p>}
+                        <div class="tracklist tracklist--compact">
+                          {side.items.map((item) => (
+                            <>
+                              <a
+                                class="track-row"
+                                href={item.href}
+                                target={item.href.startsWith('http') ? '_blank' : undefined}
+                                rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                              >
+                                <span class="track-no">{item.no}</span>
+                                <span class="track-title"><b>{articleTitle(item.href, item.title)}</b><em set:html={formatInline(item.note)}></em></span>
+                                <span class="track-rubrics">{item.rubrics}</span>
+                                <span class="track-time">{item.readTime}</span>
+                                <span class="track-go" aria-hidden="true"></span>
+                              </a>
+                              {item.extraHref && (
+                                <a class="track-extra" href={item.extraHref} target="_blank" rel="noreferrer">
+                                  {item.extraLabel || 'продолжение'}
+                                </a>
+                              )}
+                            </>
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <div class="side-list">
+                    <section class="album-side">
+                      <h4>Tracklist</h4>
+                      <div class="tracklist tracklist--compact">
+                        {album.items.map((item) => (
+                          <a
+                            class="track-row"
+                            href={item.href}
+                            target={item.href.startsWith('http') ? '_blank' : undefined}
+                            rel={item.href.startsWith('http') ? 'noreferrer' : undefined}
+                          >
+                            <span class="track-no">{item.no}</span>
+                            <span class="track-title"><b>{articleTitle(item.href, item.title)}</b><em set:html={formatInline(item.note)}></em></span>
+                            <span class="track-rubrics">{item.rubrics}</span>
+                            <span class="track-time">{item.readTime}</span>
+                            <span class="track-go" aria-hidden="true"></span>
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+                )}
+
+                {album.notes && (
+                  <div class="detail-notes">
+                    {album.notes.map((note) => (
+                      <section class="detail-note">
+                        <span>{note.title}</span>
+                        <p set:html={formatInline(note.text)}></p>
+                      </section>
+                    ))}
+                  </div>
+                )}
+              </article>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <nav class="best-nav" aria-label="Навигация">
+      <a href="/archive/"><span>В бездну</span><i aria-hidden="true"></i></a>
+      <a href="/rubrics/"><span>К рубрикам</span><i aria-hidden="true"></i></a>
+    </nav>
+  </main>
+
+  <script>
+    (() => {
+      const button = document.querySelector('[data-expand-albums]');
+      const details = Array.from(document.querySelectorAll('.album-detail'));
+      if (!button || !details.length) return;
+
+      button.addEventListener('click', () => {
+        const shouldOpen = details.some((item) => !item.open);
+        details.forEach((item) => { item.open = shouldOpen; });
+        button.textContent = shouldOpen ? '[Свернуть все]' : '[Развернуть все]';
+      });
+    })();
+  </script>
+</SiteLayout>
+
+<style>
+  :global(s) {
+    text-decoration: line-through;
+    text-decoration-thickness: 0.09em;
+    text-decoration-color: currentColor;
+  }
+
+  :global(em) {
+    font-style: italic;
+  }
+
+
+  .track-title s,
+  .album-copy s,
+  .side-lead s,
+  .detail-note s,
+  .summary-main s {
+    text-decoration: line-through;
+    text-decoration-thickness: 0.08em;
+    text-decoration-color: var(--red);
+    text-underline-offset: 0.12em;
+  }
+
+
+  .album-side h4 em {
+    font-style: italic;
+  }
+
+  .track-title > em em,
+  .side-lead em,
+  .album-copy em,
+  .detail-note em,
+  .summary-main em {
+    display: inline;
+    margin: 0;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    font-style: italic;
+  }
+
+  .track-title > em s,
+  .side-lead s,
+  .album-copy s,
+  .detail-note s,
+  .summary-main s {
+    color: inherit;
+  }
+
+  .best-page {
+    --best-header: 58px;
+    --body-bleed: 0px;
+    margin-top: calc(-1 * var(--best-header));
+    background: var(--white);
+    color: var(--black);
+    min-height: 100svh;
+  }
+
+  .best-hero {
+    padding-left: var(--pad);
+    padding-right: var(--pad);
+  }
+
+  .featured-album,
+  .album-archive {
+    width: min(1180px, calc(100% - var(--pad) * 2));
+    margin-inline: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .best-hero {
+    padding-top: calc(var(--best-header) + clamp(64px, 7.4vh, 96px));
+    padding-bottom: clamp(30px, 5vh, 58px);
+    border-bottom: 1px solid var(--black);
+  }
+
+  .best-brow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: clamp(22px, 3vh, 34px);
+    color: var(--red);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+  }
+
+  .best-hero-top {
+    display: block;
+  }
+
+  .best-hero-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(260px, 23vw, 340px);
+    gap: clamp(32px, 6vw, 96px);
+    align-items: end;
+    margin-top: clamp(6px, .9vw, 14px);
+  }
+
+  .best-title {
+    margin: 0;
+    color: var(--red);
+    font-family: var(--font-display);
+    font-size: clamp(92px, 11vw, 168px);
+    font-weight: 400;
+    line-height: .82;
+    letter-spacing: -.025em;
+    text-transform: uppercase;
+  }
+
+  .best-lede {
+    width: min(720px, 100%);
+    max-width: 720px;
+    margin: 0;
+    color: var(--black);
+    font-family: var(--font-ui);
+    font-size: clamp(16px, 1.15vw, 18px);
+    line-height: 1.72;
+    letter-spacing: .01em;
+  }
+
+  .best-counter {
+    align-self: end;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 0 14px;
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+  }
+
+  .best-counter-label,
+  .best-counter-sub {
+    display: block;
+    color: var(--gray);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .18em;
+  }
+
+  .best-counter-num {
+    display: block;
+    margin: 10px 0 12px;
+    color: var(--red);
+    font-family: var(--font-display);
+    font-size: clamp(58px, 5vw, 82px);
+    line-height: .86;
+    letter-spacing: -.01em;
+  }
+
+  .featured-album,
+  .album-archive {
+    padding-top: clamp(62px, 8vw, 110px);
+    padding-bottom: clamp(60px, 8vw, 110px);
+  }
+
+  .featured-album {
+    border-bottom: 1px solid var(--black);
+  }
+
+  .album-archive {
+    border-bottom: 0;
+  }
+
+  .best-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 28px;
+    align-items: end;
+    margin-bottom: clamp(28px, 4vw, 48px);
+  }
+
+  .section-num { display: none; }
+
+  .best-section-head h2 {
+    margin: 0;
+    color: var(--black);
+    font-family: var(--font-display);
+    font-size: clamp(54px, 6vw, 82px);
+    font-weight: 400;
+    line-height: .9;
+    letter-spacing: -.018em;
+    text-transform: uppercase;
+  }
+
+  .best-section-head p {
+    max-width: 520px;
+    margin: 14px 0 0;
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-style: italic;
+    line-height: 1.55;
+  }
+
+  .section-count {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .section-count b {
+    color: var(--red);
+    font-family: var(--font-display);
+    font-size: clamp(48px, 4.4vw, 70px);
+    font-weight: 400;
+    line-height: .86;
+    letter-spacing: -.01em;
+  }
+
+  .featured-grid {
+    display: grid;
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+    gap: clamp(34px, 4.2vw, 56px);
+    align-items: start;
+  }
+
+  .album-cover {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--black);
+    background: var(--soft);
+    isolation: isolate;
+  }
+
+  .album-cover:before,
+  .album-cover:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .album-cover:before {
+    background:
+      radial-gradient(circle at 24% 30%, rgba(209, 11, 11, .36), transparent 30%),
+      radial-gradient(circle at 78% 70%, rgba(10, 10, 9, .18), transparent 34%),
+      linear-gradient(135deg, rgba(240,237,230,.92), rgba(230,226,214,.6));
+  }
+
+  .album-cover:after {
+    opacity: .36;
+    background:
+      repeating-linear-gradient(0deg, rgba(10,10,9,.12) 0 1px, transparent 1px 18px),
+      repeating-linear-gradient(90deg, rgba(10,10,9,.08) 0 1px, transparent 1px 18px);
+    mix-blend-mode: multiply;
+  }
+
+  .album-cover img {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .album-cover--image:before {
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(240, 237, 230, .08), rgba(10, 10, 9, .2));
+    mix-blend-mode: multiply;
+  }
+
+  .album-cover--image:after {
+    z-index: 1;
+    opacity: .2;
+  }
+
+  .cover-03:before { background: radial-gradient(circle at 28% 28%, rgba(209,11,11,.5), transparent 32%), radial-gradient(circle at 74% 72%, rgba(240,150,85,.42), transparent 38%), linear-gradient(145deg, #f0ede6 0%, #dfd6c4 100%); }
+  .album-cover--image.cover-03:before,
+  .album-cover--image.cover-03:after,
+  .album-cover--image.cover-02:before,
+  .album-cover--image.cover-02:after,
+  .album-cover--image.cover-01:before,
+  .album-cover--image.cover-01:after,
+  .album-cover--image.cover-00:before,
+  .album-cover--image.cover-00:after {
+    display: none;
+  }
+  .cover-02:before { background: radial-gradient(circle at 70% 25%, rgba(209,11,11,.42), transparent 30%), radial-gradient(circle at 22% 74%, rgba(80,90,120,.34), transparent 38%), linear-gradient(145deg, #ebe6d9 0%, #d6d0c2 100%); }
+  .cover-01:before { background: radial-gradient(circle at 30% 70%, rgba(209,11,11,.48), transparent 32%), radial-gradient(circle at 78% 24%, rgba(210,140,70,.34), transparent 34%), linear-gradient(145deg, #f0ede6 0%, #ded4bf 100%); }
+  .cover-00:before { background: radial-gradient(circle at 52% 40%, rgba(209,11,11,.42), transparent 34%), radial-gradient(circle at 15% 82%, rgba(10,10,9,.22), transparent 38%), linear-gradient(145deg, #ebe6d9 0%, #d9d3c4 100%); }
+
+  .album-cover--large {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+  .album-cover--small {
+    width: 84px;
+    height: 84px;
+    flex: 0 0 84px;
+  }
+
+  .cover-tag,
+  .cover-season,
+  .cover-name {
+    position: absolute;
+    z-index: 2;
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+  }
+
+  .cover-tag {
+    top: 16px;
+    left: 16px;
+    color: var(--red);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .22em;
+  }
+
+  .cover-name {
+    left: 16px;
+    bottom: 42px;
+    color: var(--black);
+    font-weight: 700;
+    font-size: clamp(18px, 2.2vw, 32px);
+    line-height: .95;
+    letter-spacing: .02em;
+  }
+
+  .cover-season {
+    right: 16px;
+    bottom: 16px;
+    color: var(--gray);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .18em;
+  }
+
+  .album-cover--small .cover-tag {
+    top: 8px;
+    left: 8px;
+    font-size: 8px;
+    letter-spacing: .14em;
+  }
+
+  .album-main {
+    border-top: 1px solid var(--black);
+  }
+
+  .album-meta {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .album-meta span:first-child {
+    color: var(--red);
+    font-weight: 700;
+  }
+
+  .album-title-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: end;
+    margin: clamp(24px, 3vw, 38px) 0 16px;
+  }
+
+  .album-main h3 {
+    max-width: 720px;
+    margin: 0;
+    color: var(--black);
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 82px);
+    font-weight: 400;
+    line-height: .92;
+    letter-spacing: -.018em;
+    text-transform: uppercase;
+  }
+
+  .album-count {
+    display: grid;
+    justify-items: end;
+    gap: 3px;
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 9px;
+    line-height: 1;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .album-count b {
+    color: var(--red);
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 400;
+    line-height: .82;
+  }
+
+  .album-main > p {
+    max-width: 760px;
+    margin: 0 0 clamp(30px, 4vw, 52px);
+    color: var(--black);
+    font-family: var(--font-ui);
+    font-size: clamp(15px, 1.15vw, 18px);
+    line-height: 1.65;
+  }
+  .album-main--featured > p {
+    margin-top: clamp(24px, 3vw, 38px);
+  }
+
+  .album-copy {
+    display: grid;
+    gap: 14px;
+    max-width: 760px;
+    margin: 0 0 clamp(30px, 4vw, 52px);
+  }
+
+  .album-copy p {
+    margin: 0;
+    color: var(--black);
+    font-family: var(--font-ui);
+    font-size: clamp(15px, 1.15vw, 18px);
+    line-height: 1.65;
+  }
+
+
+  .side-list {
+    display: grid;
+    gap: clamp(28px, 4vw, 44px);
+  }
+
+  .album-side h4 {
+    margin: 0 0 12px;
+    color: var(--red);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .album-side h4::first-letter { color: inherit; }
+
+  .tracklist {
+    border-top: 1px solid var(--black);
+  }
+
+  .track-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(260px, 1fr) minmax(96px, 136px) minmax(70px, 92px) 18px;
+    gap: 12px;
+    align-items: center;
+    min-height: 62px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    font-family: var(--font-ui);
+  }
+
+  .track-row:before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 -100%;
+    width: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(209,11,11,.08) 50%, rgba(209,11,11,.15) 100%);
+    transition: left var(--motion-sweep) var(--ease);
+    pointer-events: none;
+  }
+
+  .track-row:hover:before { left: 0; }
+
+  .track-row > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .track-no {
+    color: var(--red);
+    font-size: 11px;
+    letter-spacing: .16em;
+  }
+
+  .track-title b {
+    display: block;
+    color: var(--black);
+    font-size: 14px;
+    line-height: 1.3;
+    letter-spacing: .02em;
+  }
+
+  .track-title em {
+    display: block;
+    max-width: 680px;
+    margin-top: 5px;
+    color: var(--gray);
+    font-size: 12px;
+    line-height: 1.45;
+    font-style: normal;
+  }
+
+  .track-rubrics,
+  .track-time {
+    color: var(--gray);
+    font-size: 10px;
+    line-height: 1.25;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .track-rubrics {
+    color: var(--red);
+  }
+
+  .track-time {
+    max-width: 92px;
+    white-space: normal;
+    text-align: left;
+    justify-self: start;
+    transform: translateX(-8px);
+    overflow-wrap: anywhere;
+  }
+
+  .track-go {
+    display:block;
+    width:11px;
+    height:12px;
+    margin-left:4px;
+    flex:0 0 auto;
+    background:var(--red);
+    clip-path:polygon(0 0,100% 50%,0 100%);
+    transition:transform var(--motion-hover) var(--ease);
+  }
+
+  .track-row:hover .track-go {
+    transform: translateX(3px);
+  }
+
+
+  .side-lead {
+    max-width: 760px;
+    margin: -2px 0 16px;
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .track-extra {
+    display: inline-block;
+    margin: -8px 0 14px 52px;
+    color: var(--red);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .featured-album-outro {
+    margin-top: clamp(32px, 4vw, 48px);
+    padding-top: 18px;
+    border-top: 1px solid var(--black);
+    font-family: var(--font-ui);
+  }
+
+  .featured-album-outro a {
+    color: var(--red);
+  }
+
+  .featured-album-outro p {
+    max-width: 760px;
+    margin: 0;
+    color: var(--gray);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .best-section-head--archive {
+    align-items: start;
+  }
+
+  .expand-all {
+    align-self: end;
+    border: 0;
+    background: transparent;
+    color: var(--red);
+    padding: 0 0 2px;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .album-details-list {
+    border-top: 1px solid var(--black);
+  }
+
+  .album-detail {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .album-detail summary {
+    list-style: none;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr) 92px 20px;
+    gap: 22px;
+    align-items: center;
+    padding: 18px 0;
+  }
+
+  .album-detail summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .summary-main {
+    min-width: 0;
+  }
+
+  .summary-issue {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--red);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .summary-main b {
+    display: block;
+    color: var(--black);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.25;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+
+  .summary-main em {
+    display: block;
+    max-width: 760px;
+    margin-top: 6px;
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: 1.45;
+    font-style: normal;
+  }
+
+  .summary-count {
+    display: grid;
+    justify-items: end;
+    gap: 3px;
+    color: var(--gray);
+    font-family: var(--font-ui);
+    font-size: 9px;
+    line-height: 1;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .summary-count b {
+    color: var(--red);
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 400;
+    line-height: .82;
+  }
+
+  .summary-mark {
+    display:block;
+    width:16px;
+    height:16px;
+    justify-self:end;
+    background:var(--red);
+    -webkit-mask:url('/assets/Cross_45.png') center/contain no-repeat;
+    mask:url('/assets/Cross_45.png') center/contain no-repeat;
+    transform:rotate(45deg);
+    transition:transform var(--motion-hover) var(--ease), opacity var(--motion-ui) var(--ease);
+  }
+
+  .album-detail summary:hover .summary-mark {
+    transform:rotate(45deg) scale(1.06);
+  }
+
+  .album-detail[open] > summary {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--black);
+  }
+
+  .album-detail[open] > summary .album-cover--small,
+  .album-detail[open] > summary .summary-main,
+  .album-detail[open] > summary .summary-count {
+    display: none;
+  }
+
+  .album-detail[open] > summary .summary-mark,
+  .album-detail[open] > summary:hover .summary-mark {
+    justify-self: center;
+    transform: rotate(0deg);
+  }
+
+  .detail-body {
+    padding: clamp(22px, 3vw, 36px) 0 clamp(38px, 5vw, 64px);
+  }
+
+  .album-detail[open] > .detail-body {
+    border-top: 1px solid var(--black);
+  }
+  .detail-notes {
+    display: grid;
+    gap: 22px;
+    margin-top: clamp(32px, 4vw, 48px);
+  }
+
+
+  .detail-note {
+    border-top: 1px solid var(--black);
+    padding-top: 14px;
+    font-family: var(--font-ui);
+  }
+
+  .detail-note span {
+    display: block;
+    margin-bottom: 16px;
+    color: var(--red);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .detail-note p {
+    margin: 0;
+    color: var(--gray);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .tracklist--compact .track-row {
+    grid-template-columns: 38px minmax(240px, 1fr) minmax(90px, 130px) minmax(70px, 92px) 18px;
+  }
+
+  .best-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    border-top: 1px solid var(--black);
+    border-bottom: 1px solid var(--black);
+  }
+
+  .best-nav a {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 20px;
+    min-height: 68px;
+    padding: 0 var(--pad);
+    border-right: 1px solid var(--line);
+    color: var(--black);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    transition: background var(--motion-ui) var(--ease);
+  }
+
+  .best-nav a:last-child {
+    border-right: 0;
+  }
+
+  .best-nav a:hover {
+    background: var(--soft);
+  }
+
+  .best-nav i {
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid var(--red);
+  }
+
+  @media (max-width: 1180px) {
+    .featured-grid {
+      grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+      gap: 30px;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .track-row,
+    .tracklist--compact .track-row {
+      grid-template-columns: 36px minmax(0, 1fr) minmax(70px, max-content) 20px;
+    }
+
+    .track-rubrics {
+      grid-column: 2 / 3;
+      grid-row: 2;
+      margin-top: -10px;
+    }
+
+    .track-time {
+      grid-column: 3 / 4;
+      grid-row: 2;
+      margin-top: -10px;
+      transform: translateX(-6px);
+    }
+
+    .track-go {
+      grid-column: 4 / 5;
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+  }
+
+  @media (max-width: 880px) {
+    .best-page{--best-header:56px}
+    .best-hero {
+      padding-top: calc(var(--best-header) + 58px);
+      padding-bottom: 54px;
+    }
+
+    .best-hero-bottom {
+      gap: 22px;
+      margin-top: 10px;
+    }
+
+    .best-hero-bottom,
+    .featured-grid,
+    .detail-body {
+      grid-template-columns: 1fr;
+    }
+
+    .best-counter {
+      width: 100%;
+      max-width: none;
+    }
+
+    .album-cover--large {
+      max-width: 520px;
+    }
+
+    .album-meta {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .album-title-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .album-count {
+      justify-items: start;
+    }
+
+    .album-detail summary {
+      grid-template-columns: 64px minmax(0, 1fr) 42px 18px;
+      gap: 14px;
+    }
+
+    .album-detail[open] > summary {
+      display: flex;
+    }
+
+    .album-cover--small {
+      width: 64px;
+      height: 64px;
+      flex-basis: 64px;
+    }
+
+    .summary-main em {
+      display: none;
+    }
+
+    .summary-count span {
+      display: none;
+    }
+
+    .detail-body {
+      padding-left: 0;
+      gap: 22px;
+    }
+
+    .track-row,
+    .tracklist--compact .track-row {
+      grid-template-columns: 34px minmax(0, 1fr) 22px;
+      gap: 12px;
+      min-height: 58px;
+    }
+
+    .track-rubrics,
+    .track-time {
+      display: none;
+    }
+
+    .best-nav {
+      grid-template-columns: 1fr;
+    }
+
+    .best-nav a {
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .best-brow {
+      font-size: 9px;
+      letter-spacing: .14em;
+    }
+
+    .best-title {
+      font-size: clamp(64px, 19vw, 116px);
+    }
+
+    .best-lede {
+      font-size: 15px;
+    }
+
+    .best-section-head {
+      grid-template-columns: 1fr;
+    }
+
+    .section-count {
+      justify-items: start;
+    }
+
+    .album-detail summary {
+      grid-template-columns: 56px minmax(0, 1fr) 38px 18px;
+    }
+
+    .album-detail[open] > summary {
+      display: flex;
+    }
+
+    .summary-count {
+      display: grid;
+      justify-items: end;
+    }
+
+    .summary-count span {
+      display: none;
+    }
+
+    .detail-body {
+      padding-left: 0;
+    }
+
+    .album-cover--small {
+      width: 56px;
+      height: 56px;
+      flex-basis: 56px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .summary-mark { width: 14px; height: 14px; }
+  }
+
+
+  /* Mobile track triangle fix:
+     keep the original hover/tap animation, but return the triangle
+     from the implicit 4th grid column into the real 3rd mobile column. */
+  @media (max-width: 760px) {
+    .track-row,
+    .tracklist--compact .track-row {
+      grid-template-columns: 34px minmax(0, 1fr) 28px;
+      padding-right: 4px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .track-go {
+      grid-column: 3 / 4;
+      grid-row: 1 / span 2;
+      justify-self: center;
+      align-self: center;
+      margin-left: 0;
+      transition: transform var(--motion-hover) var(--ease);
+    }
+
+    .track-row:hover .track-go,
+    .track-row:active .track-go,
+    .track-row:focus-visible .track-go {
+      transform: translateX(3px);
+    }
+  }
+
+</style>

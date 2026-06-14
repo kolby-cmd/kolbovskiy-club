@@ -1,0 +1,52 @@
+---
+const { current = '', telegramUrl = 'https://t.me/klb_clb' } = Astro.props;
+
+const navItems = [
+  { key: 'fresh', label: 'Свежее', href: '/#fresh' },
+  { key: 'best', label: 'Колба', href: '/best/' },
+  { key: 'archive', label: 'Бездна', href: '/archive/' },
+  { key: 'rubrics', label: 'Рубрики', href: '/rubrics/' },
+  { key: 'about', label: 'О проекте', href: '/about/' },
+  { key: 'privacy', label: 'Дисклеймер', href: '/privacy-policy/' }
+];
+---
+<header class="site-header">
+  <div class="topbar">
+    <div class="top-left">
+      <span class="top-note">ЧАСТНОЕ МЕДИА / ПУБЛИЧНЫЙ АРХИВ</span>
+    </div>
+
+    <a class="brand-logo" href="/" aria-label="KOLBOVSKIY.CLUB">
+      <img class="logo-img" src="/assets/Logo_damn_1.svg" alt="KOLBOVSKIY.CLUB" />
+    </a>
+
+    <div class="top-right">
+      <a class="tg-link" href={telegramUrl} target="_blank" rel="noopener">@klb_clb</a>
+      <button class="mobile-menu-toggle" id="menuToggle" type="button" aria-label="Открыть меню" aria-controls="mobilePanel">
+        <span class="skull" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="nav-row" aria-label="Главное меню">
+    <div class="nav-core">
+      {navItems.map((item) => (
+        <a href={item.href} aria-current={current === item.key ? 'page' : undefined}>{item.label}</a>
+      ))}
+    </div>
+    <button class="search-inline" id="searchOpen" type="button">Поиск</button>
+  </nav>
+</header>
+
+<div class="mobile-panel" id="mobilePanel">
+  <div class="mobile-panel-inner">
+    <div class="mobile-panel__head"><span>KOLBOVSKIY.CLUB</span><span>МЕНЮ / УКАЗАТЕЛЬ</span></div>
+    <nav aria-label="Мобильное меню">
+      {navItems.map((item) => <a href={item.href} aria-current={current === item.key ? 'page' : undefined}>{item.label}</a>)}
+    </nav>
+    <div class="mobile-small">
+      <a href="#search" id="mobileSearchOpen">Поиск по публикациям →</a>
+      <a href={telegramUrl} target="_blank" rel="noopener">Канал → @klb_clb</a>
+    </div>
+  </div>
+</div>

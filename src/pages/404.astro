@@ -1,0 +1,22 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const page = {
+  seoTitle: '404 — kolbovskiy.club',
+  description: 'Страница не найдена. Возможно, материал ушёл глубже в архив kolbovskiy.club.',
+  canonical: 'https://kolbovskiy.club/404/'
+};
+---
+<SiteLayout title={page.seoTitle} description={page.description} canonical={page.canonical} ogType="website" current="archive">
+  <main class="plain-page">
+    <div class="plain-shell">
+      <div class="plain-kicker"><span class="dot dot-pulse"></span><span>KOLBOVSKIY.CLUB · 404</span></div>
+      <h1 class="plain-title">404</h1>
+      <div class="plain-text">
+        <p>Такого входа в архив нет.</p>
+        <p>Материал мог сменить адрес, утонуть в старой версии сайта или просто никогда не существовать.</p>
+        <p><a href="/archive/">В Бездну →</a></p>
+      </div>
+    </div>
+  </main>
+</SiteLayout>

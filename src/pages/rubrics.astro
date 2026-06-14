@@ -1,0 +1,793 @@
+---
+import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_PERSON_ID } from '../data/siteEntity';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { articles } from '../data/articles';
+
+const page = {
+  seoTitle: 'Рубрики — kolbovskiy.club',
+  description: 'Таксономия kolbovskiy.club: МЛРМ, WAYAWAY, красивое, намолнии, душетушка и WIMM — рубрики авторского архива.',
+  canonical: 'https://kolbovskiy.club/rubrics/'
+};
+
+const articleList = articles.filter(Boolean);
+const byDateDesc = [...articleList].sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+const stripHtml = (value = '') => value.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const articleHref = (article) => `/txt/${article.slug}/`;
+const topicsLine = (article) => article.topics.slice(0, 3).join(' / ') || stripHtml(article.deckHtml) || article.rubrics.join(' / ');
+const pluralize = (count, forms) => {
+  const abs = Math.abs(Number(count)) % 100;
+  const last = abs % 10;
+  if (abs > 10 && abs < 20) return forms[2];
+  if (last > 1 && last < 5) return forms[1];
+  if (last === 1) return forms[0];
+  return forms[2];
+};
+const materialWord = (count) => pluralize(count, ['материал', 'материала', 'материалов']);
+
+const rubricConfigs = [
+  { id: 'mlrm', mark: 'М', tag: '#МЛРМ', title: 'Мой Любимый Реальный Мир', desc: 'Сложные системы, власть, капитал, рынки, геополитика, информация и человеческое поведение.', links: 'рынки / власть / капитал / информация / геополитика' },
+  { id: 'wayaway', mark: 'W', tag: '#WAYAWAY', title: 'Города, страны, среды', desc: 'Полевые тексты о местах как инструментах расширения мышления.', links: 'поле / дорога / города / страны / среда' },
+  { id: 'krasivoe', mark: 'К', tag: '#красивое', title: 'Визуальная культура', desc: 'Архитектура, изображение, кино, цифровое искусство, красота и профессиональная оптика.', links: 'изображение / кино / архитектура / CG / красота' },
+  { id: 'namolnii', mark: 'Н', tag: '#намолнии', title: 'Вспышки и проблески', desc: 'Короткие тексты, где мысль не разворачивается в статью, но остаётся точным сигналом.', links: 'коротко / сцена / жест / наблюдение' },
+  { id: 'dushetushka', mark: 'Д', tag: '#душетушка', title: 'Дух, тело, дисциплина', desc: 'Тело как рабочий инструмент, платформа, ограничение, желание и форма дисциплины.', links: 'тело / дисциплина / желание / платформа / предел' },
+  { id: 'wimm', mark: '?', tag: '#WIMM', title: 'Where is my mind?', desc: 'Смещения восприятия, странные состояния, культурные сбои и внутренний шум.', links: 'восприятие / шум / культура / смещение' }
+];
+
+const rubrics = rubricConfigs
+  .map((config) => {
+    const rubricArticles = byDateDesc.filter((article) => article.rubrics.includes(config.tag));
+    return {
+      ...config,
+      count: String(rubricArticles.length).padStart(2, '0'),
+      countNumber: rubricArticles.length,
+      items: rubricArticles.map((article) => [article.issue, article.dateLabel, article.title, articleHref(article), topicsLine(article), article.readTime])
+    };
+  });
+
+const relationPairs = new Map();
+articleList.forEach((article) => {
+  const rubrics = article.rubrics;
+  if (rubrics.length < 2) return;
+  for (let i = 0; i < rubrics.length; i += 1) {
+    for (let j = i + 1; j < rubrics.length; j += 1) {
+      const pair = [rubrics[i], rubrics[j]].map((item) => item.replace('#', '')).join(' + ');
+      if (!relationPairs.has(pair)) relationPairs.set(pair, []);
+      relationPairs.get(pair).push({
+        issue: article.issue,
+        date: article.dateLabel,
+        title: article.title,
+        href: articleHref(article)
+      });
+    }
+  }
+});
+
+const intersections = [...relationPairs.entries()]
+  .map(([pair, items]) => ({
+    pair,
+    count: items.length,
+    countLabel: `${items.length} ${materialWord(items.length)}`,
+    preview: items.slice(0, 3).map((item) => item.title).join(' / '),
+    items
+  }))
+  .sort((a, b) => b.count - a.count || a.pair.localeCompare(b.pair, 'ru'));
+
+const totalRelatedLinks = articleList.reduce((sum, article) => sum + (article.related?.length ?? 0), 0);
+
+const jsonLd = buildJsonLdGraph({
+  '@type': 'CollectionPage',
+  '@id': `${page.canonical}#webpage`,
+  name: page.seoTitle,
+  description: page.description,
+  url: page.canonical,
+  inLanguage: 'ru',
+  isPartOf: { '@id': KOLBOVSKIY_CLUB_WEBSITE_ID },
+  author: { '@id': KOLBOVSKIY_PERSON_ID },
+  publisher: { '@id': KOLBOVSKIY_PERSON_ID },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: rubrics.length,
+    itemListElement: rubrics.map((rubric, index) => ({ '@type': 'ListItem', position: index + 1, name: rubric.tag, description: rubric.desc, url: `${page.canonical}#${rubric.id}` }))
+  }
+});
+---
+<style is:global>
+  .rubrics-page{
+    --rbr-header:58px;
+    --rbr-col:min(720px,calc(100vw - var(--pad)*2));
+    --rbr-main:min(1180px,calc(100vw - var(--pad)*2));
+    --rbr-bleed: 0px;
+    margin-top:calc(-1 * var(--rbr-header));
+    min-height:100svh;
+    background:var(--white);
+    padding:calc(var(--rbr-header) + clamp(64px,7.4vh,96px)) var(--pad) 0;
+    border-bottom:0!important;
+  }
+
+  .rbr-shell{width:100%;max-width:none;margin:0 auto}
+  .rbr-map{width:100%;max-width:none;margin-left:0;margin-right:0}
+  .rbr-details,
+  .rbr-detail,
+  .rbr-cross,
+  .rbr-cross-list{width:100%;max-width:var(--rbr-main);margin-left:auto;margin-right:auto}
+
+  .rbr-hero{padding-bottom:clamp(30px,5vh,58px)}
+  .rbr-hero-top{display:block}
+  .rbr-hero-bottom{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) clamp(260px,23vw,340px);
+    gap:clamp(32px,6vw,96px);
+    align-items:end;
+    margin-top:clamp(6px,.9vw,14px);
+  }
+  .rbr-kicker{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:clamp(22px,3vh,34px);
+    color:var(--red);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .rbr-title{
+    margin:0;
+    font-family:var(--font-display)!important;
+    font-size:clamp(72px,10.4vw,168px)!important;
+    line-height:.84;
+    letter-spacing:-.02em;
+    text-transform:uppercase;
+    font-weight:400;
+    color:var(--red);
+  }
+  .rbr-desc{
+    width:min(720px,100%);
+    max-width:720px;
+    margin:0;
+    color:var(--black);
+    font-family:var(--font-ui)!important;
+    font-size:clamp(16px,1.15vw,18px);
+    line-height:1.72;
+    font-style:normal;
+    text-wrap:pretty;
+  }
+
+  .rbr-stat{
+    display:grid;
+    width:100%;
+    grid-template-columns:1fr;
+    gap:18px;
+    margin:0;
+    align-self:end;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    border-bottom:0;
+  }
+  .rbr-stat-label{
+    display:block;
+    padding:0;
+    color:var(--gray);
+    font-size:11px;
+    line-height:1.2;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .rbr-stat-number{
+    display:block;
+    margin:0;
+    font-family:var(--font-display)!important;
+    color:var(--red);
+    font-size:clamp(52px,5.6vw,82px);
+    line-height:.78;
+    font-weight:400;
+    letter-spacing:-.02em;
+  }
+  .rbr-stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .rbr-stat-cell{padding:14px 0;color:var(--gray);font-size:10px;line-height:1.25;letter-spacing:.14em;text-transform:uppercase;border-right:0}
+  .rbr-stat-cell+.rbr-stat-cell{border-left:1px solid var(--line);padding-left:18px}
+  .rbr-stat-cell span{display:block;color:var(--gray);font-size:10px;line-height:1;letter-spacing:.16em;text-transform:uppercase;margin-bottom:7px}
+  .rbr-stat-cell b{display:block;margin-top:6px;color:var(--black);font-weight:700;font-size:14px;letter-spacing:.08em}
+
+  .rbr-map{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    border-top:1px solid var(--black);
+    border-left:1px solid var(--line);
+    margin-bottom:clamp(86px,12vh,140px);
+  }
+  .rbr-card{
+    min-height:360px;
+    display:grid;
+    grid-template-rows:auto auto 1fr auto;
+    gap:18px;
+    padding:28px 26px 24px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:rgba(240,237,230,.22);
+    transition:background var(--motion-ui) var(--ease),transform var(--motion-hover) var(--ease);
+  }
+  .rbr-card:hover{background:var(--soft);transform:translateY(-3px)}
+  .rbr-mark{
+    font-family:var(--font-display)!important;
+    color:var(--red);
+    font-size:clamp(70px,7vw,118px);
+    line-height:.78;
+    letter-spacing:-.02em;
+  }
+  .rbr-card-meta{
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    color:var(--red);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+  .rbr-card h2{
+    font-family:var(--font-ui)!important;
+    font-size:13px;
+    line-height:1.35;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .rbr-card p{
+    max-width:95%;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.55;
+    font-style:italic;
+  }
+  .rbr-card-go{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    padding-right:18px;
+    color:var(--red);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+  .rbr-triangle{
+    display:block;
+    width:11px;
+    height:12px;
+    flex:0 0 auto;
+    background:var(--red);
+    clip-path:polygon(0 0,100% 50%,0 100%);
+    transition:transform var(--motion-hover) var(--ease);
+  }
+  .rbr-card:hover .rbr-triangle{transform:translateX(2px)}
+
+  .rbr-detail{
+    display:grid;
+    grid-template-columns:clamp(260px,25vw,360px) minmax(0,1fr);
+    gap:clamp(36px,6vw,82px);
+    padding:clamp(54px,7vh,82px) 0;
+    border-top:1px solid var(--black);
+    scroll-margin-top:120px;
+  }
+  .rbr-detail:first-of-type{border-top:1px solid var(--black)}
+  .rbr-detail-head{display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+  .rbr-detail-tag{
+    color:var(--red);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+  .rbr-detail h2{
+    font-family:var(--font-display)!important;
+    font-size:clamp(44px,5.4vw,82px);
+    line-height:.86;
+    letter-spacing:-.012em;
+    text-transform:uppercase;
+    font-weight:400;
+    color:var(--red)!important;
+  }
+  .rbr-detail-desc{
+    max-width:360px;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.58;
+    font-style:italic;
+  }
+  .rbr-links{
+    margin-top:auto;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.5;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .rbr-links b{display:block;color:var(--red);font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px}
+
+  .rbr-list{border-top:1px solid var(--black)}
+  .rbr-row{
+    position:relative;
+    display:grid;
+    grid-template-columns:68px 110px minmax(104px,140px) minmax(0,1fr) minmax(150px,220px) 72px 28px;
+    gap:18px;
+    align-items:center;
+    padding:18px 0;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .rbr-row:before{
+    content:"";
+    position:absolute;
+    left:-100%;top:0;bottom:0;width:100%;
+    background:linear-gradient(90deg,transparent 0%,rgba(209,11,11,.10) 28%,rgba(209,11,11,.18) 100%);
+    transition:left var(--motion-sweep) var(--ease);
+    pointer-events:none;
+  }
+  .rbr-row:hover:before{left:0}
+  .rbr-row>*{position:relative;z-index:1}
+  .rbr-no,.rbr-date,.rbr-rub,.rbr-rel,.rbr-read{
+    font-size:11px;
+    line-height:1.35;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .rbr-no,.rbr-rub{color:var(--red);font-weight:700}
+  .rbr-item-title{font-size:14px;line-height:1.35;font-weight:500;color:var(--black);transition:transform var(--motion-hover) var(--ease)}
+  .rbr-row:hover .rbr-item-title{transform:translateX(3px)}
+  .rbr-rel{letter-spacing:.06em;text-transform:none;color:var(--muted)}
+  .rbr-read{text-align:right;white-space:nowrap}
+  .rbr-go{justify-self:end;padding-right:28px}
+  .rbr-row:hover .rbr-triangle{transform:translateX(1px)}
+
+  .rbr-cross{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    padding:clamp(74px,10vh,118px) 0 0;
+    border-top:1px solid var(--black);
+    margin-top:clamp(42px,6vh,72px);
+  }
+  .rbr-cross-title{
+    font-family:var(--font-display)!important;
+    font-size:clamp(48px,5.4vw,82px)!important;
+    line-height:.86;
+    letter-spacing:-.012em;
+    text-transform:uppercase;
+    font-weight:400;
+    color:var(--black);
+  }
+  .rbr-cross>div:first-child{
+    display:block!important;
+    width:100%!important;
+    max-width:var(--rbr-col)!important;
+    margin:0!important;
+  }
+  .rbr-cross-desc{
+    max-width:var(--rbr-col);
+    margin-top:18px;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.58;
+    font-style:italic;
+  }
+  .rbr-cross-list{
+    display:block!important;
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-top:clamp(30px,4vh,46px);
+    border-top:1px solid var(--black);
+  }
+  .rbr-cross-row{
+    position:relative;
+    display:grid;
+    grid-template-columns:minmax(180px,300px) minmax(0,1fr);
+    gap:18px;
+    align-items:center;
+    padding:18px 0;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .rbr-cross-row:before,
+  .rbr-cross-item:before{
+    content:"";
+    position:absolute;
+    left:-100%;
+    top:0;
+    bottom:0;
+    width:100%;
+    background:linear-gradient(90deg,transparent 0%,rgba(209,11,11,.10) 28%,rgba(209,11,11,.18) 100%);
+    transition:left var(--motion-sweep) var(--ease);
+    pointer-events:none;
+  }
+  .rbr-cross-row:hover:before,
+  .rbr-cross-item:hover:before{left:0}
+  .rbr-cross-row>*{position:relative;z-index:1}
+  .rbr-cross-row b{
+    color:var(--red);
+    font-size:11px;
+    line-height:1.35;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+  .rbr-cross-row span{
+    color:var(--black);
+    font-size:13px;
+    line-height:1.45;
+    transition:transform var(--motion-hover) var(--ease);
+  }
+  .rbr-cross-row:hover span{transform:translateX(3px)}
+  a.rbr-cross-row{
+    color:inherit;
+    text-decoration:none;
+  }
+  .rbr-cross-row,
+  .rbr-cross-group summary{
+    cursor:pointer;
+  }
+  .rbr-cross-group{
+    border-bottom:1px solid var(--line);
+  }
+  .rbr-cross-group>.rbr-cross-row{
+    border-bottom:0;
+    list-style:none;
+  }
+  .rbr-cross-group[open]>.rbr-cross-row{border-bottom:1px solid var(--line)}
+  .rbr-cross-group>.rbr-cross-row::-webkit-details-marker{display:none}
+  .rbr-cross-inner{
+    padding:0 0 18px calc(300px + 18px);
+  }
+  .rbr-cross-item{
+    position:relative;
+    display:grid;
+    grid-template-columns:68px 110px minmax(0,1fr);
+    gap:18px;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+    color:inherit;
+    text-decoration:none;
+    overflow:hidden;
+  }
+  .rbr-cross-item:last-child{border-bottom:0}
+  .rbr-cross-item>*{position:relative;z-index:1}
+  .rbr-cross-item-no,
+  .rbr-cross-item-date{
+    color:var(--red);
+    font-size:10px;
+    line-height:1.35;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+  .rbr-cross-item-date{color:var(--muted);font-weight:400}
+  .rbr-cross-item-title{
+    color:var(--black);
+    font-size:13px;
+    line-height:1.45;
+    transition:transform var(--motion-hover) var(--ease);
+  }
+  .rbr-cross-item:hover .rbr-cross-item-title{transform:translateX(3px)}
+
+  .rbr-nav{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    width:calc(100% + var(--pad)*2);
+    margin-left:calc(var(--pad)*-1);
+    margin-right:calc(var(--pad)*-1);
+    margin-top:clamp(74px,10vh,118px);
+    margin-bottom:0;
+    border-top:1px solid var(--black);
+    border-bottom:1px solid var(--black);
+    background:rgba(240,237,230,.18);
+  }
+  .rbr-nav a{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    gap:20px;
+    min-height:68px;
+    padding:0 var(--pad);
+    border-right:1px solid var(--line);
+    color:var(--black);
+    font-family:var(--font-ui)!important;
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    transition:background var(--motion-ui) var(--ease);
+  }
+  .rbr-nav a:last-child{border-right:0}
+  .rbr-nav a:hover{background:var(--soft);color:var(--black)}
+  .rbr-nav i{
+    width:0;
+    height:0;
+    border-top:5px solid transparent;
+    border-bottom:5px solid transparent;
+    border-left:8px solid var(--red);
+    transition:none;
+  }
+  .rbr-nav a:hover i{transform:none}
+
+
+  /* FINAL RUBRICS WIDTH / MARK LOCK */
+  .rbr-details,
+  .rbr-detail,
+  .rbr-cross,
+  .rbr-map{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  .rbr-cross-list{
+    width:100%!important;
+    max-width:var(--rbr-main)!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  .rbr-card .rbr-mark,
+  .rbr-detail .rbr-detail-letter{
+    color:var(--red)!important;
+    -webkit-text-fill-color:var(--red)!important;
+    text-shadow:none!important;
+  }
+
+  @media(max-width:1180px){
+    .rbr-hero-bottom{grid-template-columns:minmax(0,1fr) minmax(240px,300px);gap:40px}
+    .rbr-map{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .rbr-detail{grid-template-columns:1fr;gap:28px}
+    .rbr-detail-desc,.rbr-links,.rbr-cross-desc{max-width:var(--rbr-col)}
+    .rbr-row{grid-template-columns:64px 104px minmax(98px,130px) minmax(0,1fr) 70px 28px;gap:14px}
+    .rbr-rel{grid-column:4 / 5;grid-row:2;margin-top:-10px;padding-top:0;color:var(--muted)}
+    .rbr-read{grid-column:5;grid-row:1 / 3;align-self:center}
+    .rbr-go{grid-column:6;grid-row:1 / 3;align-self:center}
+  }
+
+  @media(max-width:760px){
+    .rubrics-page{
+      --rbr-header:56px;
+      --rbr-col:calc(100vw - var(--pad)*2);
+      padding:calc(var(--rbr-header) + 58px) var(--pad) 88px;
+    }
+    .rbr-hero{padding-bottom:54px}.rbr-hero-bottom{grid-template-columns:1fr;gap:22px;margin-top:10px}
+    .rbr-title{font-size:clamp(58px,18vw,92px)}
+    .rbr-desc{font-size:15px;line-height:1.62}
+    .rbr-stat{width:100%;max-width:none;align-self:auto}
+    .rbr-stat-number{font-size:68px;margin-bottom:18px}
+    .rbr-map{grid-template-columns:1fr;margin-bottom:70px}
+    .rbr-card{min-height:0;padding:26px 20px 24px}
+    .rbr-mark{font-size:74px}
+    .rbr-detail{padding:46px 0;scroll-margin-top:88px;width:100%;margin-left:auto;margin-right:auto}
+    .rbr-cross{width:100%;margin-left:auto;margin-right:auto}
+    .rbr-detail h2{font-size:56px}
+    .rbr-row{grid-template-columns:52px minmax(0,1fr) 26px;gap:12px;padding:16px 0;align-items:start}
+    .rbr-date,.rbr-rub,.rbr-read{display:none}
+    .rbr-item-title{font-size:14px;line-height:1.35}
+    .rbr-rel{grid-column:2;grid-row:2;margin-top:2px;font-size:11px;line-height:1.45}
+    .rbr-rel:before{content:'связь: ';color:var(--red);text-transform:uppercase;letter-spacing:.12em;font-size:10px}
+    .rbr-go{grid-column:3;grid-row:1 / 3;align-self:center;justify-self:end}
+    .rbr-row:hover .rbr-item-title{transform:none}
+    .rbr-cross{padding-top:66px;margin-top:30px}
+    .rbr-cross-title{font-size:68px}
+    .rbr-cross-row{grid-template-columns:1fr;gap:6px}
+    .rbr-cross-row span{color:var(--muted)}
+    .rbr-cross-inner{padding-left:0}
+    .rbr-cross-item{grid-template-columns:1fr;gap:3px;padding-top:12px}
+    .rbr-nav{grid-template-columns:1fr!important;margin-top:70px}
+    .rbr-nav a{border-right:0;border-bottom:1px solid var(--line);padding:0 var(--pad);min-height:68px}
+    .rbr-nav a:last-child{border-bottom:0}
+  }
+
+  /* FINAL RUBRICS WIDTH / MARK / ROW LOCK — pass 13 */
+  .rbr-details,
+  .rbr-detail,
+  .rbr-cross{
+    width:100%!important;
+    max-width:var(--rbr-main)!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  .rbr-map{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  .rbr-cross-list{
+    width:100%!important;
+    max-width:100%!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  .rbr-card .rbr-mark,
+  .rbr-detail .rbr-detail-letter{
+    color:var(--red)!important;
+    -webkit-text-fill-color:var(--red)!important;
+    text-shadow:none!important;
+  }
+
+  .rbr-row{
+    grid-template-columns:68px 110px minmax(104px,140px) minmax(0,1fr) max-content 36px!important;
+    column-gap:18px!important;
+    row-gap:6px!important;
+    align-items:center!important;
+  }
+
+  .rbr-item-title{
+    grid-column:4!important;
+    grid-row:1!important;
+    min-width:0!important;
+  }
+
+  .rbr-rel{
+    grid-column:4!important;
+    grid-row:2!important;
+    min-width:0!important;
+    margin-top:0!important;
+    padding-top:0!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .rbr-read{
+    grid-column:5!important;
+    grid-row:1 / 3!important;
+    align-self:center!important;
+    justify-self:end!important;
+    white-space:nowrap!important;
+  }
+
+  .rbr-go{
+    grid-column:6!important;
+    grid-row:1 / 3!important;
+    align-self:center!important;
+    justify-self:end!important;
+    padding-right:12px!important;
+  }
+
+  @media(max-width:1180px){
+    .rbr-row{
+      grid-template-columns:64px 104px minmax(98px,130px) minmax(0,1fr) 70px 32px!important;
+      column-gap:14px!important;
+    }
+  }
+
+  @media(max-width:760px){
+    .rbr-row{
+      grid-template-columns:52px minmax(0,1fr) 26px!important;
+      gap:12px!important;
+    }
+    .rbr-date,.rbr-rub,.rbr-read{display:none!important}
+    .rbr-item-title{grid-column:2!important;grid-row:1!important}
+    .rbr-rel{grid-column:2!important;grid-row:2!important;margin-top:2px!important}
+    .rbr-rel:before{content:none!important;display:none!important}
+    .rbr-go{grid-column:3!important;grid-row:1 / 3!important;padding-right:0!important}
+  }
+
+
+  /* === AUDIT PASS 32: remove mobile blank field after final buttons === */
+  @media(max-width:760px){
+    .rubrics-page{padding-bottom:0!important;}
+    .rbr-shell{padding-bottom:0!important;}
+    .rbr-nav{margin-bottom:0!important;}
+  }
+
+</style>
+<SiteLayout title={page.seoTitle} description={page.description} canonical={page.canonical} ogType="website" current="rubrics" jsonLd={jsonLd}>
+  <main class="rubrics-page">
+    <div class="rbr-shell">
+      <section class="rbr-hero" aria-labelledby="rubrics-title">
+        <div class="rbr-hero-top">
+          <div class="rbr-kicker"><span class="dot dot-pulse"></span><span>КАРТА РУБРИК</span></div>
+          <h1 class="rbr-title" id="rubrics-title">Рубрики</h1>
+        </div>
+        <div class="rbr-hero-bottom">
+          <p class="rbr-desc">Рубрики собирают материалы по режимам наблюдения: системы, города, визуальная культура, короткие сигналы, тело и смещения восприятия.</p>
+          <aside class="rbr-stat" aria-label="Статистика рубрик">
+            <span class="rbr-stat-label">Рубрик</span>
+            <span class="rbr-stat-number">{String(rubrics.length).padStart(2, '0')}</span>
+            <div class="rbr-stat-grid">
+              <div class="rbr-stat-cell"><span>Материалов</span><b>{articleList.length}</b></div>
+              <div class="rbr-stat-cell"><span>Связей</span><b>{totalRelatedLinks}</b></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="rbr-map" aria-label="Карта рубрик">
+        {rubrics.map((rubric) => (
+          <a class="rbr-card" href={`#${rubric.id}`}>
+            <span class="rbr-mark" style="color:var(--red);-webkit-text-fill-color:var(--red);">{rubric.mark}</span>
+            <div class="rbr-card-meta"><span>{rubric.tag}</span><span>{`${rubric.count} ${materialWord(rubric.countNumber)}`}</span></div>
+            <div>
+              <h2>{rubric.title}</h2>
+              <p>{rubric.desc}</p>
+            </div>
+            <span class="rbr-card-go"><span>Перейти</span><span class="rbr-triangle" aria-hidden="true"></span></span>
+          </a>
+        ))}
+      </section>
+
+      <section class="rbr-details" aria-label="Рубрики и материалы">
+        {rubrics.map((rubric) => (
+          <section class="rbr-detail" id={rubric.id}>
+            <div class="rbr-detail-head">
+              <span class="rbr-detail-tag">{rubric.tag} · {`${rubric.count} ${materialWord(rubric.countNumber)}`}</span>
+              <h2 class="rbr-detail-letter" style="color:var(--red);-webkit-text-fill-color:var(--red);">{rubric.mark}</h2>
+              <p class="rbr-detail-desc">{rubric.desc}</p>
+              <p class="rbr-links"><b>Связи</b>{rubric.links}</p>
+            </div>
+            <div class="rbr-list" aria-label={`Материалы рубрики ${rubric.tag}`}>
+              {rubric.items.map((item) => (
+                <a class="rbr-row" href={item[3]}>
+                  <span class="rbr-no">{item[0]}</span>
+                  <span class="rbr-date">{item[1]}</span>
+                  <span class="rbr-rub">{rubric.tag.replace('#','')}</span>
+                  <span class="rbr-item-title">{item[2]}</span>
+                  <span class="rbr-rel">{item[4]}</span>
+                  <span class="rbr-read">{item[5]}</span>
+                  <span class="rbr-go"><span class="rbr-triangle" aria-hidden="true"></span></span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+      </section>
+
+      <section class="rbr-cross" aria-labelledby="cross-title">
+        <div>
+          <h2 class="rbr-cross-title" id="cross-title">Пересечения</h2>
+          <p class="rbr-cross-desc">Материалы часто проходят через несколько рубрик сразу: тема, место, форма и настроение связывают разные части корпуса.</p>
+        </div>
+        <div class="rbr-cross-list" aria-label="Пояснение пересечений рубрик">
+          {intersections.map((row) => (
+            row.count > 1 ? (
+              <details class="rbr-cross-group">
+                <summary class="rbr-cross-row">
+                  <b>{row.pair}</b>
+                  <span>{row.countLabel} · {row.preview}</span>
+                </summary>
+                <div class="rbr-cross-inner">
+                  {row.items.map((item) => (
+                    <a class="rbr-cross-item" href={item.href}>
+                      <span class="rbr-cross-item-no">{item.issue}</span>
+                      <span class="rbr-cross-item-date">{item.date}</span>
+                      <span class="rbr-cross-item-title">{item.title}</span>
+                    </a>
+                  ))}
+                </div>
+              </details>
+            ) : (
+              <a class="rbr-cross-row" href={row.items[0]?.href ?? '/archive/'}>
+                <b>{row.pair}</b>
+                <span>{row.countLabel} · {row.preview}</span>
+              </a>
+            )
+          ))}
+        </div>
+      </section>
+
+      <nav class="rbr-nav" aria-label="Навигация по архиву">
+        <a href="/archive/"><span>В бездну</span><i aria-hidden="true"></i></a>
+        <a href="/best/"><span>К лучшему</span><i aria-hidden="true"></i></a>
+      </nav>
+    </div>
+  </main>
+</SiteLayout>

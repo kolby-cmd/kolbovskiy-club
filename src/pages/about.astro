@@ -1,0 +1,39 @@
+---
+import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_DIGITAL_BODY_ID, KOLBOVSKIY_PERSON_ID } from '../data/siteEntity';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const page = {
+  title: 'О проекте',
+  seoTitle: 'О проекте — kolbovskiy.club',
+  description: 'kolbovskiy.club — частное авторское медиа и публичный архив Никиты Колбовского о реальном мире, сложных системах, технологиях, рынках, культуре и сбоях среды.',
+  canonical: 'https://kolbovskiy.club/about/',
+  telegramUrl: 'https://t.me/klb_clb'
+};
+
+const jsonLd = buildJsonLdGraph({
+  '@type': 'AboutPage',
+  '@id': `${page.canonical}#webpage`,
+  name: page.seoTitle,
+  description: page.description,
+  url: page.canonical,
+  inLanguage: 'ru',
+  isPartOf: { '@id': KOLBOVSKIY_CLUB_WEBSITE_ID },
+  about: { '@id': KOLBOVSKIY_DIGITAL_BODY_ID },
+  author: { '@id': KOLBOVSKIY_PERSON_ID },
+  publisher: { '@id': KOLBOVSKIY_PERSON_ID }
+});
+---
+<SiteLayout title={page.seoTitle} description={page.description} canonical={page.canonical} ogType="website" current="about" telegramUrl={page.telegramUrl} jsonLd={jsonLd}>
+  <main class="plain-page">
+    <div class="plain-shell">
+      <div class="plain-kicker"><span class="dot dot-pulse"></span><span>KOLBOVSKIY.CLUB · ПУБЛИЧНЫЙ АРХИВ</span></div>
+      <h1 class="plain-title">О проекте</h1>
+      <div class="plain-text">
+        <p>kolbovskiy.club — частное авторское медиа и публичный архив Никиты Колбовского о реальном мире, сложных системах, технологиях, рынках, культуре и сбоях среды.</p>
+        <p>Публицистика на грани рынков, культуры и дизайна. Тексты появляются, когда сигнал сильнее шума. Без интеграций и задач на охват. Только мысль и Skin in the Game.</p>
+        <p>Это проект об устройстве современной реальности — о том, что проявляется, если внимательно смотреть. Не всегда приятное зрелище. Механика власти и капитала, культурные сдвиги, дизайн, техносфера, архитектура и алгоритмы.</p>
+        <p>Принципы вместо новостей; ясность вместо эмоций; реальность вместо иллюзий.</p>
+      </div>
+    </div>
+  </main>
+</SiteLayout>

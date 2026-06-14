@@ -1,0 +1,1193 @@
+---
+import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_PERSON_ID } from '../data/siteEntity';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { articles } from '../data/articles';
+
+const page = {
+  seoTitle: 'Бездна — полный архив kolbovskiy.club',
+  description: 'Полный архив kolbovskiy.club: авторские тексты, рубрики, связи и сигналы о технологиях, рынках, культуре, путешествиях и сбоях системы.',
+  canonical: 'https://kolbovskiy.club/archive/'
+};
+
+const articleList = articles.filter(Boolean);
+const byDateDesc = [...articleList].sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+const stripHtml = (value = '') => value.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const articleHref = (article) => `/txt/${article.slug}/`;
+const formatRubric = (rubric = '') => rubric.replace('#', '');
+const topicsLine = (article) => article.topics.slice(0, 3).join(' / ') || stripHtml(article.deckHtml) || article.rubrics.map(formatRubric).join(' / ');
+
+const getArticleYear = (article) => {
+  const candidates = [article.datetime, article.date, article.dateLabel].filter(Boolean).map(String);
+  for (const value of candidates) {
+    const match = value.match(/(?:^|\D)((?:19|20)\d{2})(?:\D|$)/);
+    if (match) return match[1];
+  }
+  return '';
+};
+
+const uniqueYears = [...new Set(articleList.map(getArticleYear).filter(Boolean))];
+
+const pluralRu = (count, forms) => {
+  const value = Math.abs(Number(count));
+  const mod100 = value % 100;
+  const mod10 = value % 10;
+  if (mod100 >= 11 && mod100 <= 14) return forms[2];
+  if (mod10 === 1) return forms[0];
+  if (mod10 >= 2 && mod10 <= 4) return forms[1];
+  return forms[2];
+};
+
+const formatMaterialCount = (count) => `${String(count).padStart(2, '0')} ${pluralRu(count, ['материал', 'материала', 'материалов'])}`;
+
+const rubricConfigs = [
+  { tag: '#МЛРМ', label: 'МЛРМ' },
+  { tag: '#WAYAWAY', label: 'WAYAWAY' },
+  { tag: '#красивое', label: 'красивое' },
+  { tag: '#намолнии', label: 'намолнии' },
+  { tag: '#душетушка', label: 'душетушка' },
+  { tag: '#WIMM', label: 'WIMM' }
+];
+
+const activeRubrics = rubricConfigs.map((rubric) => ({
+  ...rubric,
+  count: articleList.filter((article) => article.rubrics.includes(rubric.tag)).length
+}));
+
+const uniqueRubrics = rubricConfigs.map((rubric) => rubric.tag);
+
+const stats = { total: String(articleList.length).padStart(3, '0'), years: String(uniqueYears.length).padStart(2, '0'), rubrics: String(uniqueRubrics.length).padStart(2, '0') };
+
+const rubricControls = [
+  { label: 'Все', value: 'all' },
+  ...activeRubrics.map((rubric) => ({ label: `${rubric.label} · ${String(rubric.count).padStart(2, '0')}`, value: rubric.label }))
+];
+
+const sortControls = [
+  { label: 'Новые сверху', value: 'new' },
+  { label: 'Старые сверху', value: 'old' },
+  { label: 'Короткие', value: 'short' },
+  { label: 'Длинные', value: 'long' }
+];
+
+const viewControls = [
+  { label: 'Таблица', value: 'table' },
+  { label: 'Сигналы', value: 'signals' }
+];
+
+const defaultArchiveState = { rubric: 'all', sort: 'new', view: 'table' };
+const archiveHashByView = { table: '', signals: 'signals-title' };
+const allowedSortValues = new Set(sortControls.map((item) => item.value));
+const allowedViewValues = new Set(viewControls.map((item) => item.value));
+const allowedRubricValues = new Set(rubricControls.map((item) => item.value));
+const archiveParams = Astro.url.searchParams;
+const requestedRubric = archiveParams.get('rubric') ?? defaultArchiveState.rubric;
+const requestedSort = archiveParams.get('sort') ?? defaultArchiveState.sort;
+const requestedView = archiveParams.get('view') ?? defaultArchiveState.view;
+const currentArchiveState = {
+  rubric: allowedRubricValues.has(requestedRubric) ? requestedRubric : defaultArchiveState.rubric,
+  sort: allowedSortValues.has(requestedSort) ? requestedSort : defaultArchiveState.sort,
+  view: allowedViewValues.has(requestedView) ? requestedView : defaultArchiveState.view
+};
+const buildArchiveHref = (patch = {}) => {
+  const state = { ...currentArchiveState, ...patch };
+  const params = new URLSearchParams();
+  if (state.rubric !== defaultArchiveState.rubric) params.set('rubric', state.rubric);
+  if (state.sort !== defaultArchiveState.sort) params.set('sort', state.sort);
+  if (state.view !== defaultArchiveState.view) params.set('view', state.view);
+  const query = params.toString();
+  const hash = archiveHashByView[state.view] ?? archiveHashByView.table;
+  return `/archive/${query ? `?${query}` : ''}${hash ? `#${hash}` : ''}`;
+};
+
+const archive = byDateDesc.map((article) => {
+  const rubrics = article.rubrics.map(formatRubric);
+  const timestamp = new Date(article.datetime ?? article.date).getTime();
+  const readValue = Number.parseInt(String(article.readTime), 10) || 0;
+  return {
+    year: getArticleYear(article),
+    no: article.issue,
+    date: article.dateLabel,
+    rubric: rubrics.join(' / '),
+    rubrics,
+    title: article.title,
+    link: articleHref(article),
+    relation: topicsLine(article),
+    read: article.readTime,
+    readValue,
+    timestamp: Number.isFinite(timestamp) ? timestamp : 0
+  };
+});
+
+const compareArchiveRows = (sort) => (a, b) => {
+  if (sort === 'old') return (a.timestamp || 0) - (b.timestamp || 0);
+  if (sort === 'short') return (a.readValue || 0) - (b.readValue || 0) || (b.timestamp || 0) - (a.timestamp || 0);
+  if (sort === 'long') return (b.readValue || 0) - (a.readValue || 0) || (b.timestamp || 0) - (a.timestamp || 0);
+  return (b.timestamp || 0) - (a.timestamp || 0);
+};
+
+const visibleArchive = archive
+  .filter((item) => item.year)
+  .filter((item) => currentArchiveState.rubric === 'all' || item.rubrics.includes(currentArchiveState.rubric))
+  .sort(compareArchiveRows(currentArchiveState.sort));
+
+const groupedArchive = visibleArchive.reduce((acc, item) => {
+  if (!acc[item.year]) acc[item.year] = [];
+  acc[item.year].push(item);
+  return acc;
+}, {});
+
+const nodes = [
+  ['Мировые проекты', 'Лебедьрак / Тайвань / Южная Азия / будущие карты'],
+  ['Markets & Madness', 'крипта / долг / жадность / фрикономика'],
+  ['Information & Intelligence', 'информация / разведка / нарратив / источник'],
+  ['Beautiful Systems', 'изображение / архитектура / CG / кино'],
+  ['Body & Permission', 'тело / платформа / предел / дозволенное'],
+  ['Cinema Machines', 'сериалы / миф / Америка / культурный код']
+];
+
+const signalPool = byDateDesc.map((article) => [stripHtml(article.pullQuote ?? article.thesis), `${article.title}, ${article.issue}`, articleHref(article)]).filter(([quote]) => quote.length > 0);
+const visibleSignalCount = 3;
+const signals = signalPool.slice(0, visibleSignalCount);
+const entryArticle = articleList.find((article) => article.slug === 'information') ?? byDateDesc[0];
+
+const jsonLd = buildJsonLdGraph({
+  '@type': 'CollectionPage',
+  '@id': `${page.canonical}#webpage`,
+  name: page.seoTitle,
+  description: page.description,
+  url: page.canonical,
+  inLanguage: 'ru',
+  isPartOf: { '@id': KOLBOVSKIY_CLUB_WEBSITE_ID },
+  author: { '@id': KOLBOVSKIY_PERSON_ID },
+  publisher: { '@id': KOLBOVSKIY_PERSON_ID },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: archive.length,
+    itemListElement: archive.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.title, url: item.link.startsWith('/') ? `https://kolbovskiy.club${item.link}` : undefined }))
+  }
+});
+---
+<style is:global>
+  .abyss-page{
+    --abyss-header:58px;
+    --abyss-side-col:clamp(280px,24vw,340px);
+    --archive-bleed: 0px;
+    margin-top:calc(-1 * var(--abyss-header));
+    min-height:100svh;
+    background:var(--white);
+    padding:calc(var(--abyss-header) + clamp(64px,7.4vh,96px)) var(--pad) clamp(96px,14vh,160px);
+    border-bottom:0!important;
+  }
+
+  .abyss-shell{width:100%;max-width:none;margin:0 auto}
+
+  .abyss-hero{
+    padding-bottom:clamp(30px,5vh,58px);
+    border-bottom:0;
+  }
+
+  .abyss-hero-top{
+    display:block;
+  }
+
+  .abyss-hero-bottom{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) var(--abyss-side-col);
+    gap:clamp(32px,6vw,96px);
+    align-items:end;
+    margin-top:clamp(6px,.9vw,14px);
+  }
+
+  .abyss-kicker{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:clamp(22px,3vh,34px);
+    color:var(--red);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+
+  .abyss-title{
+    margin:0;
+    font-family:var(--font-display)!important;
+    font-size:clamp(72px,10.4vw,168px);
+    line-height:.84;
+    letter-spacing:-.02em;
+    font-weight:400;
+    text-transform:uppercase;
+    color:var(--red);
+  }
+
+  .abyss-lede{
+    width:min(720px,100%);
+    margin-top:0;
+    color:var(--black);
+    font-family:var(--font-ui)!important;
+    font-size:clamp(16px,1.15vw,18px);
+    line-height:1.72;
+    text-wrap:pretty;
+  }
+
+  .abyss-lede p{margin:0}
+  .abyss-lede p+p{margin-top:1.25em}
+
+  .abyss-count{
+    display:grid;
+    width:100%;
+    grid-template-columns:1fr;
+    gap:18px;
+    margin:0;
+    align-self:end;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    transform:none;
+  }
+
+  .abyss-count__label{
+    color:var(--gray);
+    font-size:11px;
+    line-height:1.2;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+
+  .abyss-count__num{
+    font-family:var(--font-display)!important;
+    color:var(--red);
+    font-size:clamp(52px,5.6vw,82px);
+    line-height:.78;
+    letter-spacing:-.02em;
+  }
+
+  .abyss-count__grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .abyss-count__cell{
+    padding:14px 0;
+    color:var(--gray);
+    font-size:10px;
+    line-height:1.25;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .abyss-count__cell+.abyss-count__cell{border-left:1px solid var(--line);padding-left:18px}
+  .abyss-count__cell b{display:block;margin-top:6px;color:var(--black);font-weight:700;font-size:14px;letter-spacing:.08em}
+
+  .abyss-panel{
+    display:grid;
+    grid-template-columns:minmax(140px,.24fr) minmax(0,1fr);
+    gap:0;
+    margin:clamp(36px,5.5vh,64px) 0 clamp(44px,6.5vh,76px);
+    border-top:1px solid var(--black);
+    border-bottom:1px solid var(--black);
+  }
+
+  .abyss-panel__label{
+    padding:18px 20px 18px 0;
+    border-bottom:1px solid var(--line);
+    color:var(--red);
+    font-size:10px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .abyss-panel__row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 14px;
+    padding:14px 0 14px 20px;
+    border-left:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .abyss-panel__label:nth-last-child(2),
+  .abyss-panel__row:last-child{border-bottom:0}
+
+  .abyss-chip{
+    position:relative;
+    appearance:none;
+    border:0;
+    background:transparent;
+    min-height:24px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    color:var(--black);
+    font-size:10px;
+    line-height:1.2;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    cursor:pointer;
+    text-decoration:none;
+    transition:color var(--motion-ui) var(--ease),transform var(--motion-ui) var(--ease);
+  }
+
+  .abyss-chip:hover{color:var(--red);transform:translateX(2px)}
+  .abyss-chip.is-active{color:var(--red);font-weight:700}
+  .abyss-chip.is-red{color:var(--red);font-weight:700}
+
+  .abyss-main{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) var(--abyss-side-col);
+    gap:clamp(38px,5vw,72px);
+    align-items:start;
+  }
+
+  .abyss-register{min-width:0}
+
+  .abyss-year{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:24px;
+    align-items:end;
+    margin:0 0 22px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--black);
+  }
+
+  .abyss-year-block + .abyss-year-block{margin-top:clamp(82px,10vh,132px)}
+
+  .abyss-year__title{
+    font-family:var(--font-display)!important;
+    font-size:82px;
+    line-height:.86;
+    font-weight:400;
+    letter-spacing:-.015em;
+    color:var(--red);
+  }
+
+  .abyss-year__count{
+    color:var(--gray);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+
+  .abyss-head,
+  .abyss-row{
+    display:grid;
+    grid-template-columns:62px 94px 110px minmax(0,1fr) 92px 40px;
+    gap:14px;
+    align-items:center;
+  }
+
+  .abyss-head{
+    padding:0 0 12px;
+    color:var(--gray);
+    font-size:10px;
+    line-height:1;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+
+  .abyss-head span:nth-child(5){display:none}
+  .abyss-head span:nth-child(6),
+  .abyss-head span:nth-child(7){text-align:right;white-space:nowrap}
+
+  .abyss-row{
+    position:relative;
+    overflow:hidden;
+    padding:18px 0;
+    border-top:1px solid var(--line);
+    row-gap:6px;
+  }
+
+  .abyss-row:last-child{border-bottom:1px solid var(--line)}
+
+  .abyss-row:before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:100%;
+    background:linear-gradient(90deg,transparent 0%,rgba(209,11,11,.10) 25%,rgba(209,11,11,.20) 100%);
+    transform:translateX(-100%);
+    transition:transform var(--motion-sweep) var(--ease);
+    pointer-events:none;
+  }
+
+  .abyss-row:hover:before{transform:translateX(0)}
+  .abyss-row>*{position:relative;z-index:1}
+
+  .abyss-no{color:var(--red);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+  .abyss-date,.abyss-rubric,.abyss-link,.abyss-read{color:var(--gray);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  .abyss-read{white-space:nowrap}
+  .abyss-rubric{color:var(--red)}
+  .abyss-title-row{min-width:0;color:var(--black);font-weight:500;font-size:14px;line-height:1.35;transition:transform var(--motion-hover) var(--ease)}
+  .abyss-relation{min-width:0;color:var(--gray);font-size:11px;line-height:1.35;letter-spacing:.03em;text-transform:none;overflow-wrap:anywhere;word-break:normal}
+  .abyss-read,.abyss-link{text-align:right}
+  .abyss-title-row{grid-column:4;grid-row:1;min-width:0}
+  .abyss-relation{grid-column:4;grid-row:2;display:block;max-width:100%;min-width:0;padding-right:18px;overflow:visible}
+  .abyss-read{grid-column:5;grid-row:1 / span 2;align-self:center;justify-self:end;min-width:74px}
+  .abyss-link{grid-column:6;grid-row:1 / span 2;align-self:center;justify-self:end;display:flex;align-items:center;justify-content:flex-end;text-align:right;padding-right:0;overflow:visible}
+
+  .abyss-row:hover .abyss-title-row{transform:translateX(10px)}
+  .abyss-triangle{display:inline-block;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid var(--red);transform:translateX(-10px);transition:transform var(--motion-hover) var(--ease)}
+  .abyss-row:hover .abyss-triangle{transform:translateX(-5px)}
+
+  .abyss-side{
+    position:sticky;
+    top:112px;
+    z-index:3;
+    display:grid;
+    gap:34px;
+    width:100%;
+    padding-top:calc(82px * .86 + 14px);
+  }
+
+  .abyss-card{
+    border-top:1px solid var(--black);
+    border-bottom:1px solid var(--black);
+    padding:18px 0;
+    background:var(--white);
+  }
+
+  .abyss-card__head{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:20px;
+    color:var(--red);
+    font-size:10px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .abyss-node{
+    display:grid;
+    gap:6px;
+    padding:14px 0;
+    border-top:1px solid var(--line);
+  }
+
+  .abyss-node:first-of-type{border-top:0}
+  .abyss-node b{color:var(--black);font-size:12px;line-height:1.25;letter-spacing:.08em;text-transform:uppercase}
+  .abyss-node span{color:var(--gray);font-size:11px;line-height:1.45}
+
+  .abyss-random{
+    position:relative;
+    background:var(--white);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    min-height:54px;
+    padding:0 18px 0 16px;
+    border-left:3px solid var(--red);
+    color:var(--black);
+    font-size:11px;
+    line-height:1.2;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .abyss-random:before{
+    content:"";
+    position:absolute;
+    left:3px;
+    right:-22%;
+    top:-46%;
+    bottom:-46%;
+    background:
+      linear-gradient(101deg,
+        transparent 0%,
+        rgba(209,11,11,0) 12%,
+        rgba(209,11,11,.10) 24%,
+        rgba(209,11,11,.32) 40%,
+        rgba(209,11,11,.18) 56%,
+        rgba(209,11,11,0) 76%,
+        transparent 100%),
+      radial-gradient(ellipse 54% 92% at 24% 52%, rgba(209,11,11,.30) 0%, rgba(209,11,11,.12) 42%, transparent 78%),
+      radial-gradient(ellipse 70% 120% at 74% 45%, rgba(209,11,11,.24) 0%, rgba(209,11,11,.10) 45%, transparent 82%),
+      linear-gradient(118deg, transparent 0%, rgba(209,11,11,.08) 30%, rgba(209,11,11,.20) 48%, rgba(209,11,11,0) 70%, transparent 100%);
+    background-size:300% 100%, 260% 150%, 320% 170%, 360% 100%;
+    background-position:-180% 50%, -150% 50%, 170% 44%, -210% 50%;
+    filter:blur(20px);
+    opacity:.58;
+    animation:abyssWave var(--motion-wave-a) cubic-bezier(.46,.03,.22,1) infinite;
+    pointer-events:none;
+  }
+
+  .abyss-random:hover:before{opacity:.74}
+
+  .abyss-random span{position:relative;z-index:1}
+  .abyss-random .abyss-triangle{transform:translateX(-10px)}
+  .abyss-random:hover .abyss-triangle{transform:translateX(-4px)}
+
+
+
+  @keyframes abyssWave{
+    0%{background-position:-182% 52%, -154% 50%, 172% 44%, -212% 50%; opacity:.34}
+    25%{background-position:-76% 47%, -72% 56%, 104% 48%, -96% 46%; opacity:.66}
+    50%{background-position:18% 55%, 20% 45%, 22% 53%, 18% 58%; opacity:.52}
+    75%{background-position:96% 49%, 118% 57%, -60% 46%, 110% 44%; opacity:.70}
+    100%{background-position:196% 52%, 184% 50%, -190% 50%, 210% 50%; opacity:.36}
+  }
+
+  .abyss-random{isolation:isolate}
+
+
+  .abyss-signals{
+    margin-top:clamp(54px,8vh,92px);
+    padding-top:clamp(34px,5.5vh,58px);
+    border-top:1px solid var(--black);
+  }
+
+  .abyss-section-head{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:24px;
+    align-items:start;
+    margin-bottom:clamp(34px,5vh,54px);
+  }
+
+  .abyss-section-title{
+    font-family:var(--font-display)!important;
+    font-size:82px;
+    line-height:.86;
+    letter-spacing:-.012em;
+    font-weight:400;
+    text-transform:uppercase;
+  }
+
+  .abyss-section-count{
+    font-family:var(--font-display)!important;
+    color:var(--red);
+    font-size:52px;
+    line-height:.9;
+    letter-spacing:0;
+    font-weight:400;
+  }
+
+
+  .signal-tools{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:flex-start;
+    gap:2px;
+    align-self:start;
+    padding-top:0;
+    transform:translateY(-2px);
+  }
+
+  .signal-shuffle{
+    appearance:none;
+    border:0;
+    background:transparent;
+    min-height:0;
+    padding:0;
+    color:var(--black);
+    font-family:var(--font-ui)!important;
+    font-size:10px;
+    line-height:1;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+
+  .signal-shuffle:hover{color:var(--red)}
+
+  .abyss-signals-note{
+    max-width:720px;
+    margin:-10px 0 28px;
+    color:var(--gray);
+    font-size:14px;
+    line-height:1.55;
+    font-style:italic;
+  }
+
+  .signal-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .signal-item{
+    min-height:190px;
+    padding:24px 22px 20px;
+    border-right:1px solid var(--line);
+    display:flex;
+    text-decoration:none;
+    color:inherit;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:22px;
+  }
+
+  .signal-item:last-child{border-right:0}
+  .signal-item blockquote{font-family:var(--font-display)!important;color:var(--black);font-size:clamp(24px,2.55vw,38px);line-height:1.02;letter-spacing:-.008em;text-transform:uppercase}
+  .signal-item cite{color:var(--gray);font-style:normal;font-size:10px;line-height:1.3;letter-spacing:.18em;text-transform:uppercase}
+
+
+
+  @media(min-width:761px) and (max-width:1320px){
+    .abyss-hero-bottom{margin-top:clamp(24px,3.2vw,42px)}
+    .abyss-title{font-size:clamp(76px,13vw,148px)}
+  }
+
+  @media(max-width:1180px){
+    .abyss-main{grid-template-columns:1fr;width:100%;margin-left:0;margin-right:0}
+    .abyss-side{
+      position:relative;
+      top:auto;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:clamp(14px,3vw,28px);
+      align-items:stretch;
+      width:100%;
+      padding-top:clamp(42px,6vw,72px);
+    }
+    .abyss-card{height:100%}
+    .abyss-random{height:100%; min-height:100%; align-self:stretch}
+  }
+
+  @media(min-width:761px) and (max-width:980px){
+    .abyss-head,.abyss-row{grid-template-columns:56px 104px minmax(0,1fr) 84px 32px;gap:10px}
+    .abyss-head span:nth-child(2),
+    .abyss-head span:nth-child(5),
+    .abyss-date{display:none}
+    .abyss-rubric{grid-column:2;grid-row:1 / span 2;align-self:center;font-size:10px}
+    .abyss-title-row{grid-column:3;grid-row:1;min-width:0}
+    .abyss-relation{grid-column:3;grid-row:2;max-width:100%;padding-right:0;overflow:visible}
+    .abyss-read{grid-column:4;grid-row:1 / span 2;align-self:center;justify-self:end;font-size:10px;white-space:nowrap}
+    .abyss-link{grid-column:5;grid-row:1 / span 2;align-self:center;justify-self:end;padding-right:0}
+  }
+
+
+  @media(max-width:760px){
+    .abyss-page{
+      --abyss-header:56px;
+      margin-top:calc(-1 * var(--abyss-header));
+      padding:calc(var(--abyss-header) + 58px) var(--pad) 88px;
+    }
+
+    .abyss-hero{padding-bottom:42px}
+    .abyss-hero-bottom{grid-template-columns:1fr;gap:22px;margin-top:10px}
+    .abyss-kicker{margin-bottom:24px;font-size:10px;letter-spacing:.14em}
+    .abyss-title{font-size:clamp(64px,19vw,116px)}
+    .abyss-lede{font-size:16px;line-height:1.72;margin-top:0}
+    .abyss-count{max-width:none;margin-top:0;align-self:start;transform:none}
+
+    .abyss-panel{grid-template-columns:1fr;margin:42px 0 54px}
+    .abyss-panel__label{border-bottom:0;padding:16px 0 8px}
+    .abyss-panel__row{border-left:0;padding:0 0 14px}
+    .abyss-panel__row:not(:last-child){border-bottom:1px solid var(--line)}
+
+    .abyss-year{grid-template-columns:1fr;gap:10px;margin-bottom:20px}
+    .abyss-year__title{font-size:64px}
+    .abyss-year-block + .abyss-year-block{margin-top:92px}
+    .abyss-head{display:none}
+    .abyss-row{grid-template-columns:54px 1fr 34px;gap:14px;padding:16px 0}
+    .abyss-date,.abyss-rubric,.abyss-read,.abyss-relation{display:none}
+    .abyss-title-row{font-size:14px}
+    .abyss-row:hover .abyss-title-row{transform:translateX(6px)}
+
+    .abyss-side{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:14px;
+      align-items:stretch;
+      padding-top:42px;
+      border-top:0;
+      border-bottom:0;
+    }
+
+    .abyss-card{
+      border-top:1px solid var(--black);
+      border-bottom:1px solid var(--black);
+      padding:16px 0 18px;
+      min-width:0;
+      height:100%;
+    }
+
+    .abyss-card__head{margin-bottom:14px}
+    .abyss-node{padding:10px 0}
+    .abyss-node b{font-size:10px;line-height:1.24;letter-spacing:.08em}
+    .abyss-node span{font-size:9px;line-height:1.45}
+
+    .abyss-random{
+      min-height:100%;
+      height:100%;
+      padding:0 14px 0 16px;
+      border-top:1px solid var(--black);
+      border-bottom:1px solid var(--black);
+      border-left:3px solid var(--red);
+      font-size:10px;
+      letter-spacing:.14em;
+    }
+
+    .abyss-random:before{left:3px;filter:blur(14px);animation-duration:var(--motion-wave-b)}
+    .abyss-random .abyss-triangle{transform:translateX(-4px)}
+    .abyss-random:hover .abyss-triangle{transform:translateX(0)}
+
+    .signal-grid{grid-template-columns:1fr}
+    .signal-item{min-height:0;border-right:0;border-bottom:1px solid var(--line)}
+    .signal-item:last-child{border-bottom:0}
+    .abyss-section-head{grid-template-columns:1fr auto;gap:16px;align-items:end}
+    .abyss-section-title{font-size:64px}
+    .abyss-section-count{font-size:38px}
+    .signal-tools{align-items:flex-end;transform:none}
+  }
+
+  @media(max-width:520px){
+    .abyss-side{gap:12px}
+    .abyss-random{padding-right:12px; padding-left:14px}
+    .abyss-random:before{left:3px}
+  }
+
+  /* === WIDTH LOCK: archive year sections + signals match main-page section width === */
+  @media(min-width:1181px){
+    .abyss-main,
+    .abyss-signals{
+      width:100%;
+      max-width:1180px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+  }
+
+
+  /* archive row hover safety: no gradient bleed outside table */
+  .abyss-row{overflow:hidden}
+  .abyss-row:before{left:0;transform:translateX(-100%);transition:transform var(--motion-sweep) var(--ease)}
+  .abyss-row:hover:before{transform:translateX(0)}
+
+
+  /* === AUDIT PASS 18: mobile row alignment + random button border cleanup === */
+  .abyss-random{
+    border-top:0!important;
+    border-bottom:0!important;
+    box-shadow:none!important;
+  }
+
+  @media(max-width:760px){
+    .abyss-row{
+      grid-template-columns:54px minmax(0,1fr) 34px!important;
+      align-items:center!important;
+      min-height:66px;
+      row-gap:0!important;
+    }
+
+    .abyss-no{
+      grid-column:1!important;
+      grid-row:1!important;
+      align-self:center!important;
+    }
+
+    .abyss-title-row{
+      grid-column:2!important;
+      grid-row:1!important;
+      align-self:center!important;
+      justify-self:end!important;
+      text-align:right!important;
+      max-width:100%;
+      line-height:1.28;
+    }
+
+    .abyss-link{
+      grid-column:3!important;
+      grid-row:1!important;
+      align-self:center!important;
+      justify-self:end!important;
+      display:flex!important;
+      align-items:center!important;
+      justify-content:flex-end!important;
+    }
+
+    .abyss-row:hover .abyss-title-row{
+      transform:none!important;
+    }
+  }
+
+
+  /* === AUDIT PASS 32: remove mobile blank field after signals === */
+  @media(max-width:760px){
+    .abyss-page{padding-bottom:0!important;}
+    .abyss-shell{padding-bottom:0!important;}
+    .abyss-signals{margin-bottom:0!important;padding-bottom:0!important;}
+    .signal-grid{margin-bottom:0!important;}
+  }
+
+</style>
+<SiteLayout title={page.seoTitle} description={page.description} canonical={page.canonical} ogType="website" current="archive" jsonLd={jsonLd}>
+  <main class="abyss-page">
+    <div class="abyss-shell">
+      <section class="abyss-hero" aria-labelledby="abyss-title">
+        <div class="abyss-hero-top">
+          <div class="abyss-kicker"><span class="dot dot-pulse"></span><span>Полный архив</span></div>
+          <h1 class="abyss-title" id="abyss-title">Бездна</h1>
+        </div>
+        <div class="abyss-hero-bottom">
+          <div class="abyss-lede">
+            <p>Полный слой архива kolbovskiy.club: материалы из Telegram, собранные в хронологию с рубриками, связями и точками входа. Здесь можно идти по датам, темам, рубрикам и отдельным линиям корпуса.</p>
+          </div>
+          <aside class="abyss-count" aria-label="Статистика архива">
+            <span class="abyss-count__label">Материалов</span>
+            <span class="abyss-count__num">{stats.total}</span>
+            <div class="abyss-count__grid">
+              <span class="abyss-count__cell">Года<b>{stats.years}</b></span>
+              <span class="abyss-count__cell">Рубрик<b>{stats.rubrics}</b></span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="abyss-panel" aria-label="Пульт архива">
+        <div class="abyss-panel__label">Режим</div>
+        <div class="abyss-panel__row">
+          {rubricControls.map((item) => <a class:list={['abyss-chip', { 'is-active': currentArchiveState.rubric === item.value }]} href={buildArchiveHref({ rubric: item.value, view: 'table' })} data-archive-control="rubric" data-archive-value={item.value}>[{item.label}]</a>)}
+        </div>
+        <div class="abyss-panel__label">Сортировка</div>
+        <div class="abyss-panel__row">
+          {sortControls.map((item) => <a class:list={['abyss-chip', { 'is-active': currentArchiveState.sort === item.value }]} href={buildArchiveHref({ sort: item.value, view: 'table' })} data-archive-control="sort" data-archive-value={item.value}>[{item.label}]</a>)}
+        </div>
+        <div class="abyss-panel__label">Форма</div>
+        <div class="abyss-panel__row">
+          {viewControls.map((item) => <a class:list={['abyss-chip', { 'is-active': currentArchiveState.view === item.value }]} href={buildArchiveHref({ view: item.value })} data-archive-control="view" data-archive-value={item.value}>[{item.label}]</a>)}
+          <a class="abyss-chip is-red" href={articleHref(entryArticle)} data-random-entry>[Случайный вход]</a>
+        </div>
+      </section>
+
+      <script type="application/json" id="archiveData" is:inline set:html={JSON.stringify(archive)}></script>
+
+      <section class="abyss-main" aria-label="Полный архив">
+        <div class="abyss-register" id="archive-register" data-archive-register>
+          {Object.entries(groupedArchive).sort((a, b) => Number(b[0]) - Number(a[0])).map(([year, items]) => (
+            <section class="abyss-year-block" aria-labelledby={`year-${year}`}>
+              <div class="abyss-year">
+                <h2 class="abyss-year__title" id={`year-${year}`}>{year}</h2>
+                <span class="abyss-year__count">{formatMaterialCount(items.length)}</span>
+              </div>
+              <div class="abyss-head" aria-hidden="true">
+                <span>№</span><span>Дата</span><span>Рубрика</span><span>Материал</span><span>Связь</span><span>Чтение</span><span></span>
+              </div>
+              <div class="abyss-table">
+                {items.map((item) => (
+                  <a class="abyss-row" href={item.link}>
+                    <span class="abyss-no">{item.no}</span>
+                    <span class="abyss-date">{item.date}</span>
+                    <span class="abyss-rubric">{item.rubric}</span>
+                    <span class="abyss-title-row">{item.title}</span>
+                    <span class="abyss-relation">{item.relation}</span>
+                    <span class="abyss-read">{item.read}</span>
+                    <span class="abyss-link"><span class="abyss-triangle" aria-hidden="true"></span></span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <aside class="abyss-side" id="archive-nodes" aria-label="Узлы архива">
+          <section class="abyss-card">
+            <div class="abyss-card__head"><span>Узлы</span><span>{String(nodes.length).padStart(2, '0')}</span></div>
+            {nodes.map(([title, desc]) => (
+              <div class="abyss-node">
+                <b>{title}</b>
+                <span>{desc}</span>
+              </div>
+            ))}
+          </section>
+          <a class="abyss-random" href={articleHref(entryArticle)} data-random-entry>
+            <span>[Случайный вход]</span>
+            <span class="abyss-triangle" aria-hidden="true"></span>
+          </a>
+        </aside>
+      </section>
+
+      <section class="abyss-signals" aria-labelledby="signals-title">
+        <div class="abyss-section-head">
+          <h2 class="abyss-section-title" id="signals-title">Сигналы</h2>
+          <div class="signal-tools"><span class="abyss-section-count">03 / {String(signalPool.length).padStart(2, '0')}</span><button class="signal-shuffle" type="button" data-signal-shuffle>[Перемешать]</button></div>
+        </div>
+        <p class="abyss-signals-note">Короткие фразы из материалов архива. Они дают быстрый вход в темы, интонации и повторяющиеся мотивы корпуса.</p>
+        <script type="application/json" id="signalPool" is:inline set:html={JSON.stringify(signalPool)}></script>
+        <div class="signal-grid" data-signal-grid>
+          {signals.map(([quote, source, link]) => (
+            <a class="signal-item" href={link} data-signal-item>
+              <blockquote data-signal-quote>{quote}</blockquote>
+              <cite data-signal-source>— {source}</cite>
+            </a>
+          ))}
+        </div>
+      </section>
+    </div>
+  </main>
+  <script is:inline>
+    (() => {
+      const pluralRu = (count, forms) => {
+        const value = Math.abs(Number(count));
+        const mod100 = value % 100;
+        const mod10 = value % 10;
+        if (mod100 >= 11 && mod100 <= 14) return forms[2];
+        if (mod10 === 1) return forms[0];
+        if (mod10 >= 2 && mod10 <= 4) return forms[1];
+        return forms[2];
+      };
+      const formatMaterialCount = (count) => `${String(count).padStart(2, '0')} ${pluralRu(count, ['материал', 'материала', 'материалов'])}`;
+      const dataElement = document.getElementById('archiveData');
+      const register = document.querySelector('[data-archive-register]');
+      const controls = Array.from(document.querySelectorAll('[data-archive-control]'));
+      if (!dataElement || !register || controls.length === 0) return;
+
+      let archiveRows = [];
+      try {
+        archiveRows = JSON.parse(dataElement.textContent || '[]');
+      } catch (error) {
+        archiveRows = [];
+      }
+
+      if (!Array.isArray(archiveRows) || archiveRows.length === 0) return;
+
+      const randomEntryLinks = Array.from(document.querySelectorAll('[data-random-entry]'));
+      const randomEntryPool = archiveRows.map((row) => row.link).filter(Boolean);
+
+      function setRandomEntryHref(previousHref = ''){
+        if (randomEntryPool.length === 0 || randomEntryLinks.length === 0) return;
+        let nextHref = randomEntryPool[Math.floor(Math.random() * randomEntryPool.length)];
+        if (randomEntryPool.length > 1 && nextHref === previousHref) {
+          const currentIndex = randomEntryPool.indexOf(nextHref);
+          const shift = 1 + Math.floor(Math.random() * (randomEntryPool.length - 1));
+          nextHref = randomEntryPool[(currentIndex + shift) % randomEntryPool.length];
+        }
+        randomEntryLinks.forEach((link) => {
+          link.setAttribute('href', nextHref);
+        });
+      }
+
+      setRandomEntryHref();
+      randomEntryLinks.forEach((link) => {
+        link.addEventListener('pointerdown', () => setRandomEntryHref(link.getAttribute('href') || ''));
+        link.addEventListener('focus', () => setRandomEntryHref(link.getAttribute('href') || ''));
+      });
+
+      const defaultState = { rubric: 'all', sort: 'new', view: 'table' };
+      const hashByView = { table: '', signals: 'signals-title' };
+      const allowedSorts = new Set(['new', 'old', 'short', 'long']);
+      const allowedViews = new Set(['table', 'signals']);
+      const allowedRubrics = new Set(['all']);
+      archiveRows.forEach((row) => (row.rubrics || []).forEach((rubric) => allowedRubrics.add(rubric)));
+
+      function getStateFromUrl(){
+        const params = new URLSearchParams(window.location.search);
+        const rubric = params.get('rubric');
+        const sort = params.get('sort');
+        let view = params.get('view');
+
+        if (!view && window.location.hash === '#signals-title') view = 'signals';
+
+        return {
+          rubric: allowedRubrics.has(rubric) ? rubric : defaultState.rubric,
+          sort: allowedSorts.has(sort) ? sort : defaultState.sort,
+          view: allowedViews.has(view) ? view : defaultState.view
+        };
+      }
+
+      function buildUrl(state){
+        const params = new URLSearchParams();
+        if (state.rubric !== defaultState.rubric) params.set('rubric', state.rubric);
+        if (state.sort !== defaultState.sort) params.set('sort', state.sort);
+        if (state.view !== defaultState.view) params.set('view', state.view);
+        const query = params.toString();
+        const hash = hashByView[state.view] || hashByView.table;
+        return `${window.location.pathname}${query ? `?${query}` : ''}${hash ? `#${hash}` : ''}`;
+      }
+
+      function compareRows(sort){
+        return (a, b) => {
+          if (sort === 'old') return (a.timestamp || 0) - (b.timestamp || 0);
+          if (sort === 'short') return (a.readValue || 0) - (b.readValue || 0) || (b.timestamp || 0) - (a.timestamp || 0);
+          if (sort === 'long') return (b.readValue || 0) - (a.readValue || 0) || (b.timestamp || 0) - (a.timestamp || 0);
+          return (b.timestamp || 0) - (a.timestamp || 0);
+        };
+      }
+
+      function span(className, text){
+        const node = document.createElement('span');
+        node.className = className;
+        node.textContent = text ?? '';
+        return node;
+      }
+
+      function buildHead(){
+        const head = document.createElement('div');
+        head.className = 'abyss-head';
+        head.setAttribute('aria-hidden', 'true');
+        ['№', 'Дата', 'Рубрика', 'Материал', 'Связь', 'Чтение', ''].forEach((label) => {
+          const item = document.createElement('span');
+          item.textContent = label;
+          head.appendChild(item);
+        });
+        return head;
+      }
+
+      function buildRow(row){
+        const link = document.createElement('a');
+        link.className = 'abyss-row';
+        link.href = row.link || '#';
+        link.appendChild(span('abyss-no', row.no));
+        link.appendChild(span('abyss-date', row.date));
+        link.appendChild(span('abyss-rubric', row.rubric));
+        link.appendChild(span('abyss-title-row', row.title));
+        link.appendChild(span('abyss-relation', row.relation));
+        link.appendChild(span('abyss-read', row.read));
+
+        const arrowCell = document.createElement('span');
+        arrowCell.className = 'abyss-link';
+        const triangle = document.createElement('span');
+        triangle.className = 'abyss-triangle';
+        triangle.setAttribute('aria-hidden', 'true');
+        arrowCell.appendChild(triangle);
+        link.appendChild(arrowCell);
+
+        return link;
+      }
+
+      function renderArchive(rows){
+        register.replaceChildren();
+
+        const groups = new Map();
+        rows.forEach((row) => {
+          if (!groups.has(row.year)) groups.set(row.year, []);
+          groups.get(row.year).push(row);
+        });
+
+        groups.forEach((items, year) => {
+          const section = document.createElement('section');
+          section.className = 'abyss-year-block';
+          section.setAttribute('aria-labelledby', `year-${year}`);
+
+          const yearHead = document.createElement('div');
+          yearHead.className = 'abyss-year';
+
+          const title = document.createElement('h2');
+          title.className = 'abyss-year__title';
+          title.id = `year-${year}`;
+          title.textContent = year;
+
+          const count = document.createElement('span');
+          count.className = 'abyss-year__count';
+          count.textContent = formatMaterialCount(items.length);
+
+          yearHead.appendChild(title);
+          yearHead.appendChild(count);
+          section.appendChild(yearHead);
+          section.appendChild(buildHead());
+
+          const table = document.createElement('div');
+          table.className = 'abyss-table';
+          items.forEach((row) => table.appendChild(buildRow(row)));
+          section.appendChild(table);
+
+          register.appendChild(section);
+        });
+      }
+
+      function updateActiveControls(state){
+        controls.forEach((control) => {
+          const group = control.dataset.archiveControl;
+          const value = control.dataset.archiveValue;
+          control.classList.toggle('is-active', state[group] === value);
+        });
+      }
+
+      function applyState(state, shouldScroll = false){
+        const rows = archiveRows
+          .filter((row) => row.year)
+          .filter((row) => state.rubric === 'all' || (row.rubrics || []).includes(state.rubric))
+          .sort(compareRows(state.sort));
+
+        renderArchive(rows);
+        updateActiveControls(state);
+
+        if (shouldScroll) {
+          const targetId = hashByView[state.view] || hashByView.table;
+          const target = targetId ? document.getElementById(targetId) : null;
+          target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+
+      let currentState = getStateFromUrl();
+      applyState(currentState, false);
+
+      controls.forEach((control) => {
+        control.addEventListener('click', (event) => {
+          if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+          event.preventDefault();
+
+          const group = control.dataset.archiveControl;
+          const value = control.dataset.archiveValue;
+          const nextState = { ...currentState, [group]: value };
+          if (group !== 'view') nextState.view = 'table';
+
+          currentState = nextState;
+          window.history.pushState(currentState, '', buildUrl(currentState));
+          applyState(currentState, group === 'view' && value !== 'table');
+        });
+      });
+
+      window.addEventListener('popstate', () => {
+        currentState = getStateFromUrl();
+        applyState(currentState, false);
+      });
+    })();
+
+    (() => {
+      const poolElement = document.getElementById('signalPool');
+      const cards = Array.from(document.querySelectorAll('[data-signal-item]'));
+      const shuffleButton = document.querySelector('[data-signal-shuffle]');
+      if (!poolElement || cards.length === 0 || !shuffleButton) return;
+
+      let pool = [];
+      try {
+        pool = JSON.parse(poolElement.textContent || '[]');
+      } catch (error) {
+        pool = [];
+      }
+
+      if (!Array.isArray(pool) || pool.length <= cards.length) return;
+
+      function shuffledSignals(){
+        const copy = [...pool];
+        for (let index = copy.length - 1; index > 0; index -= 1) {
+          const nextIndex = Math.floor(Math.random() * (index + 1));
+          [copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]];
+        }
+        return copy.slice(0, cards.length);
+      }
+
+      function shuffleSignals(){
+        const next = shuffledSignals();
+        cards.forEach((card, index) => {
+          const quote = card.querySelector('[data-signal-quote]');
+          const source = card.querySelector('[data-signal-source]');
+          const item = next[index];
+          if (!quote || !source || !item) return;
+          quote.textContent = item[0];
+          source.textContent = `— ${item[1]}`;
+          if (item[2]) card.setAttribute('href', item[2]);
+        });
+      }
+
+      shuffleButton.addEventListener('click', shuffleSignals);
+    })();
+  </script>
+
+</SiteLayout>

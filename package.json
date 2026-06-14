@@ -1,0 +1,17 @@
+{
+  "name": "kolbovskiy-club-astro-home-v03",
+  "type": "module",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/check": "latest",
+    "astro": "latest",
+    "typescript": "latest"
+  },
+  "devDependencies": {}
+}

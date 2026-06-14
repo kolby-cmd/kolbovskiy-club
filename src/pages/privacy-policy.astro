@@ -1,0 +1,38 @@
+---
+import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_PERSON_ID } from '../data/siteEntity';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const page = {
+  title: 'Дисклеймер',
+  seoTitle: 'Дисклеймер — kolbovskiy.club',
+  description: 'Дисклеймер kolbovskiy.club: статус авторских текстов, материалов, аналитики и художественных интерпретаций.',
+  canonical: 'https://kolbovskiy.club/privacy-policy/',
+  telegramUrl: 'https://t.me/klb_clb'
+};
+
+const jsonLd = buildJsonLdGraph({
+  '@type': 'WebPage',
+  '@id': `${page.canonical}#webpage`,
+  name: page.seoTitle,
+  description: page.description,
+  url: page.canonical,
+  inLanguage: 'ru',
+  isPartOf: { '@id': KOLBOVSKIY_CLUB_WEBSITE_ID },
+
+  author: { '@id': KOLBOVSKIY_PERSON_ID },
+  publisher: { '@id': KOLBOVSKIY_PERSON_ID }
+});
+---
+<SiteLayout title={page.seoTitle} description={page.description} canonical={page.canonical} ogType="website" current="privacy" telegramUrl={page.telegramUrl} jsonLd={jsonLd}>
+  <main class="plain-page">
+    <div class="plain-shell">
+      <div class="plain-kicker"><span class="dot dot-pulse"></span><span>KOLBOVSKIY.CLUB · ПУБЛИЧНЫЙ АРХИВ</span></div>
+      <h1 class="plain-title">Дисклеймер</h1>
+      <div class="plain-text">
+        <p>kolbovskiy.club — издание «на свои».</p>
+        <p>Публикуемые материалы отражают личную позицию авторов. Тексты носят аналитический и художественный характер и не являются инвестиционной рекомендацией, юридической или иной консультацией.</p>
+        <p>Интерпретация и использование материалов остаются на стороне читателя.</p>
+      </div>
+    </div>
+  </main>
+</SiteLayout>
