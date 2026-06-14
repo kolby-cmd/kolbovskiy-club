@@ -168,7 +168,7 @@ const rubricCards = rubricConfigs
   <link rel="me" href="https://t.me/klb_clb" />
   <link rel="canonical" href={siteCanonical} />
   <link rel="alternate" type="application/rss+xml" title="kolbovskiy.club RSS" href={`${siteUrl}/rss.xml`} />
-  <meta property="og:type" content="website" />
+<meta property="og:type" content="website" />
   <meta property="og:locale" content="ru_RU" />
   <meta property="og:site_name" content="kolbovskiy.club" />
   <meta property="og:title" content={siteTitle} />
@@ -982,28 +982,6 @@ const rubricCards = rubricConfigs
     /* AUDIT PASS 25 — INDEX MICROFIXES
        Mobile menu safe-area, hero rail length, archive/best triangle animation lock. */
     @media(max-width:760px){
-      body.menu-open{
-        background:var(--white)!important;
-      }
-      body.menu-open::before{
-        content:"";
-        position:fixed;
-        left:0;
-        right:0;
-        top:-120px;
-        height:120px;
-        z-index:99;
-        pointer-events:none;
-        background:var(--white)!important;
-      }
-      body.menu-open .site-header,
-      body.menu-open .topbar{
-        background:rgba(240,237,230,.96)!important;
-      }
-      body.menu-open .mobile-panel{
-        background:var(--red)!important;
-      }
-
       .hero-title-row{
         align-items:start!important;
         line-height:.78!important;
@@ -1099,158 +1077,7 @@ const rubricCards = rubricConfigs
       }
     }
 
-
-    /* AUDIT PASS 28 — MOBILE SAFE AREA LOCK
-       iPhone browser/notch strip uses the same neutral menu/page background.
-       No red repainting of the top browser area on menu open. */
-    @media(max-width:760px){
-      html,
-      body{
-        background:var(--white)!important;
-      }
-      body.menu-open{
-        background:var(--white)!important;
-      }
-      body.menu-open::before{
-        background:var(--white)!important;
-      }
-      body.menu-open .site-header,
-      body.menu-open .topbar{
-        background:rgba(240,237,230,.96)!important;
-      }
-    }
-
-
-    /* AUDIT PASS 29 — MOBILE TOP STRIP STABILITY
-       No dynamic theme-color repainting. The iPhone/notch strip and mobile topbar
-       stay the same neutral menu background, without white/black/red blinking. */
-    @media(max-width:760px){
-      html{
-        background:#EBE6D9!important;
-      }
-      body{
-        background:#EBE6D9!important;
-      }
-      .site-header,
-      .topbar,
-      body.menu-open .site-header,
-      body.menu-open .topbar{
-        background:#EBE6D9!important;
-      }
-      body.menu-open::before{
-        content:none!important;
-        display:none!important;
-      }
-      .mobile-panel{
-        background:var(--red)!important;
-      }
-
-      .hero-title-row{
-        align-items:stretch!important;
-        line-height:.78!important;
-      }
-      .hero-title{
-        line-height:.78!important;
-        height:auto!important;
-      }
-      .hero-title-rail{
-        height:100%!important;
-        min-height:100%!important;
-        align-self:stretch!important;
-        margin-top:0!important;
-      }
-    }
-
-
-    /* AUDIT PASS 30 — MOBILE TOPBAR / SAFE-AREA HARD LOCK
-       No recoloring on menu open. The iPhone notch strip and top menu bar
-       stay the same neutral menu background in all states. */
-    @media(max-width:760px){
-      html{
-        background:#E6E2D6!important;
-      }
-      body{
-        background:#E6E2D6!important;
-      }
-      body.menu-open{
-        background:#E6E2D6!important;
-      }
-      body::before,
-      body.menu-open::before{
-        content:none!important;
-        display:none!important;
-        background:transparent!important;
-      }
-      .site-header,
-      .topbar,
-      body.menu-open .site-header,
-      body.menu-open .topbar{
-        background:#E6E2D6!important;
-        background-color:#E6E2D6!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-      }
-      .mobile-panel,
-      body.menu-open .mobile-panel{
-        background:var(--red)!important;
-      }
-    }
-
-
-    /* AUDIT PASS 31 — MOBILE TOPBAR TRUE HARD LOCK
-       The top menu strip must not repaint when the red mobile panel opens.
-       One neutral color for: html/body, site-header, topbar, and iPhone safe strip. */
-    @media(max-width:760px){
-      html,
-      body,
-      body.menu-open{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-      }
-      .site-header,
-      body .site-header,
-      .menu-open .site-header,
-      body.menu-open .site-header{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-        transition:none!important;
-      }
-      .topbar,
-      body .topbar,
-      .menu-open .topbar,
-      body.menu-open .topbar{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-        transition:none!important;
-      }
-      body::before,
-      body.menu-open::before{
-        content:none!important;
-        display:none!important;
-      }
-      .site-header::before{
-        content:"";
-        position:fixed;
-        left:0;
-        right:0;
-        top:0;
-        height:env(safe-area-inset-top, 0px);
-        background:var(--soft)!important;
-        pointer-events:none;
-        z-index:10000;
-      }
-      .mobile-panel,
-      body.menu-open .mobile-panel{
-        background:var(--red)!important;
-      }
-    }
-
-  
-    /* COSMETIC REAL-MATERIAL PATCH v2 */
+/* COSMETIC REAL-MATERIAL PATCH v2 */
     .hero-bg{
       background-size:100% auto!important;
       background-position:center var(--hero-y,center)!important;
@@ -2186,55 +2013,7 @@ const rubricCards = rubricConfigs
       }
     }
 
-    /* MOBILE TOP CAP FIX
-       Paint the area above sticky header with the same neutral header color.
-       Fixes Telegram/iOS webview showing the red mobile-panel background above menu. */
-    @media(max-width:760px){
-      html,
-      body{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-      }
-
-      .site-header{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-      }
-
-      .site-header::before{
-        content:""!important;
-        display:block!important;
-        position:absolute!important;
-        left:0!important;
-        right:0!important;
-        top:-180px!important;
-        height:180px!important;
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        pointer-events:none!important;
-        z-index:0!important;
-      }
-
-      .topbar,
-      body .topbar,
-      body.menu-open .topbar{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-      }
-
-      .nav-row,
-      body .nav-row,
-      body.menu-open .nav-row{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-      }
-    }
-
-  </style>
+</style>
 </head>
 <body>
   <div class="progress" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>

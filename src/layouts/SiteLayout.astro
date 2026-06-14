@@ -62,7 +62,7 @@ const searchSuggestions = searchIndex.slice(0, 5);
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
-  <meta property="og:type" content={ogType} />
+<meta property="og:type" content={ogType} />
   <meta property="og:site_name" content="kolbovskiy.club" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
@@ -246,55 +246,8 @@ const searchSuggestions = searchIndex.slice(0, 5);
 
     @media(max-width:1100px){.nav-core{gap:16px}.top-note{display:none}.foot-meta{grid-template-columns:1fr auto}}
     @media(max-width:760px){:root{--pad:20px;--col:min(680px,calc(100vw - 40px))}.topbar{grid-template-columns:auto 1fr auto;height:56px;padding:0 var(--pad)}.site-header,.nav-row-hidden .site-header{height:56px}.brand-logo{justify-self:start}.logo-img{width:min(184px,50vw)}.top-left{display:none}.top-right{justify-self:end;gap:0}.skull{width:26px;height:26px}.tg-link,.search-inline{display:none}.mobile-menu-toggle{display:flex;justify-content:flex-end}.nav-row{display:none}.mobile-panel{top:56px;max-height:calc(100dvh - 56px)}.mobile-panel-inner{width:100%;margin:0}.progress{top:56px}.search-panel{padding:28px var(--pad)}.search-box{width:100%;max-width:none;margin:0}.search-result{grid-template-columns:52px 1fr 24px}.search-result .rub{display:none}.plain-page{--plain-header:56px;padding:calc(var(--plain-header) + 58px) var(--pad) 88px}.plain-title{font-size:clamp(54px,17vw,96px);margin-bottom:30px}.plain-kicker{font-size:10px;letter-spacing:.14em;margin-bottom:24px}.foot{min-height:0;padding:44px var(--pad) 0}.foot-title{font-size:clamp(48px,15vw,86px);max-width:none;margin-bottom:18px}.foot-cta{margin-bottom:30px}.foot-meta{grid-template-columns:1fr auto;gap:22px;padding-bottom:22px}.foot-credits{font-size:10px}.age-mark{font-size:18px}.foot-bottom{grid-template-columns:1fr auto;gap:24px;height:auto;padding:16px 0}.foot-bottom-links{display:none}}
-    /* MOBILE TOP CAP FIX
-       Paint the area above sticky header with the same neutral header color.
-       Fixes Telegram/iOS webview showing the red mobile-panel background above menu. */
-    @media(max-width:760px){
-      html,
-      body{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-      }
 
-      .site-header{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-      }
-
-      .site-header::before{
-        content:""!important;
-        display:block!important;
-        position:absolute!important;
-        left:0!important;
-        right:0!important;
-        top:-180px!important;
-        height:180px!important;
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        pointer-events:none!important;
-        z-index:0!important;
-      }
-
-      .topbar,
-      body .topbar,
-      body.menu-open .topbar{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-      }
-
-      .nav-row,
-      body .nav-row,
-      body.menu-open .nav-row{
-        background:var(--soft)!important;
-        background-color:var(--soft)!important;
-        backdrop-filter:none!important;
-        -webkit-backdrop-filter:none!important;
-      }
-    }
-
-  </style>
+</style>
   <slot name="pageStyles" />
 </head>
 <body>
