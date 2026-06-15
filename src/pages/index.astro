@@ -155,7 +155,7 @@ const rubricCards = rubricConfigs
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0A0A09" />
+  <meta name="theme-color" content="#F0EDE6" />
   <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
@@ -1663,7 +1663,7 @@ body.menu-open .mobile-panel{
       gap:0!important;
       border-top:1px solid var(--black)!important;
       border-left:1px solid rgba(240,237,230,.18)!important;
-      background:var(--black)!important;
+      background:#F0EDE6!important;
     }
     .fresh-card,
     .fresh-card.has-image{
@@ -1675,7 +1675,7 @@ body.menu-open .mobile-panel{
       gap:0!important;
       align-content:start!important;
       overflow:hidden!important;
-      background:var(--black)!important;
+      background:#F0EDE6!important;
       background-image:none!important;
       color:var(--white)!important;
       border-right:1px solid rgba(240,237,230,.20)!important;
@@ -1684,7 +1684,7 @@ body.menu-open .mobile-panel{
     }
     .fresh-card:hover{
       transform:translateY(-3px)!important;
-      background:var(--black)!important;
+      background:#F0EDE6!important;
     }
     .fresh-card:before{
       display:none!important;
@@ -1712,7 +1712,7 @@ body.menu-open .mobile-panel{
       aspect-ratio:1 / 1.04!important;
       overflow:hidden!important;
       border:0!important;
-      background:var(--black)!important;
+      background:#F0EDE6!important;
     }
     .fresh-media.has-image::after,
     .fresh-media.no-image::before,
@@ -2012,14 +2012,12 @@ body.menu-open .mobile-panel{
         display:none!important;
       }
     }
-
-
     /* INDEX MOBILE EXPOSED TOP STRIP
-       Only the exposed iPhone/WebView strip above the site is black, not cream. */
+       Exposed iPhone/WebView strip above the site uses the same color as the mobile menu. */
     @media(max-width:760px){
       html{
-        background:var(--black)!important;
-        background-color:var(--black)!important;
+        background:#F0EDE6!important;
+        background-color:#F0EDE6!important;
       }
       body{
         background:var(--white);
