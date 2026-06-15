@@ -1,5 +1,25 @@
 ---
+import { buildJsonLdGraph, KOLBOVSKIY_CLUB_WEBSITE_ID, KOLBOVSKIY_DIGITAL_BODY_ID, KOLBOVSKIY_PERSON_ID } from '../data/siteEntity';
 import { articles } from '../data/articles';
+
+const siteUrl = 'https://kolbovskiy.club';
+const siteTitle = 'kolbovskiy.club — частное медиа о сложных системах и неопределённости';
+const siteDescription = 'Авторское издание Никиты Колбовского о реальном мире: технологиях, рынках, власти, культуре, архитектуре, путешествиях и сбоях системы.';
+const siteCanonical = `${siteUrl}/`;
+const siteOgImage = `${siteUrl}/og/kolbovskiy-club.jpg`;
+const webSiteJsonLd = buildJsonLdGraph({
+  '@type': 'WebPage',
+  '@id': `${siteCanonical}#webpage`,
+  name: siteTitle,
+  description: siteDescription,
+  url: siteCanonical,
+  inLanguage: 'ru',
+  isPartOf: { '@id': KOLBOVSKIY_CLUB_WEBSITE_ID },
+  about: { '@id': KOLBOVSKIY_DIGITAL_BODY_ID },
+  author: { '@id': KOLBOVSKIY_PERSON_ID },
+  publisher: { '@id': KOLBOVSKIY_PERSON_ID },
+  primaryImageOfPage: siteOgImage
+});
 
 const articleList = articles.filter(Boolean);
 const bySlug = Object.fromEntries(articleList.map((article) => [article.slug, article]));
@@ -31,7 +51,8 @@ const imageFocusY = (article) => {
     'perfectionism-inc': '50%',
     'na-iznos': '42%',
     'khoroshaya': '42%',
-    'siggraph-24': '50%'
+    'siggraph-24': '50%',
+    'edge-of-the-world-4k': '50%'
   };
 
   return focus[article.slug] ?? '50%';
@@ -76,15 +97,36 @@ const heroToneVars = (article) => {
 };
 
 
-const featuredArticle = bySlug['genius-act-1'] ?? byDateDesc[0];
+const featuredArticle = bySlug['edge-of-the-world-4k'] ?? bySlug['genius-act-1'] ?? byDateDesc[0];
 const heroTitle = featuredArticle.title.toUpperCase().replace(/\s+/g, '\u00A0');
-const freshArticles = byDateDesc.slice(0, 3);
+const heroCaptionHtml = [featuredArticle.deckHtml, featuredArticle.description].filter(Boolean).join('<br>');
+const freshArticles = byDateDesc.filter((article) => Boolean(article.heroImage)).slice(0, 4);
 const archivePreview = byDateDesc.slice(0, 5);
-const searchItems = [
-  bySlug['genius-act-1'],
-  bySlug['information'],
-  bySlug['liquidation-of-greed']
-].filter(Boolean);
+const searchIndex = articleList.map((article) => {
+  const deck = deckText(article);
+  const rubrics = article.rubrics ?? [];
+  const topics = article.topics ?? [];
+  const body = Array.isArray(article.body) ? article.body.map(stripHtml).join(' ') : '';
+
+  return {
+    issue: article.issue,
+    rubric: rubrics[0]?.replace('#', '') ?? 'архив',
+    label: deck ? `${article.title} / ${deck}` : article.title,
+    href: articleHref(article),
+    haystack: [
+      article.issue,
+      article.title,
+      deck,
+      article.description,
+      article.excerpt,
+      article.thesis,
+      rubrics.join(' '),
+      topics.join(' '),
+      body
+    ].filter(Boolean).join(' ')
+  };
+});
+const searchSuggestions = searchIndex.slice(0, 5);
 
 const archiveTotal = articleList.length;
 const kolbaVolumes = [
@@ -100,7 +142,7 @@ const rubricConfigs = [
   { tag: '#МЛРМ', id: 'mlrm', mark: 'М', name: '#МЛРМ', desc: 'Мой Любимый Реальный Мир. Рынки, власть, информация, геополитика и большие системы.' },
   { tag: '#WAYAWAY', id: 'wayaway', mark: 'W', name: '#WAYAWAY', desc: 'Полевые тексты о местах как инструментах расширения мышления.' },
   { tag: '#красивое', id: 'krasivoe', mark: 'К', name: '#Красивое', desc: 'Проекты, визуал, кино, архитектура и цифровое искусство как способ читать форму.' },
-  { tag: '#намолнии', id: 'namolnii', mark: 'Н', name: '#На молнии', desc: 'Короткие удары: одна сцена, одна формула, один нерв без длинного разгона.' },
+  { tag: '#намолнии', id: 'namolnii', mark: 'Н', name: '#намолнии', desc: 'Короткие удары: одна сцена, одна формула, один нерв без длинного разгона.' },
   { tag: '#душетушка', id: 'dushetushka', mark: 'Д', name: '#Душетушка', desc: 'Тело, дисциплина, желание, ограничения и странная экономика человеческого ресурса.' },
   { tag: '#WIMM', id: 'wimm', mark: '?', name: '#WIMM', desc: 'Where is my mind: сбои восприятия, внутренний шум, культурные странности и сдвиги.' }
 ];
@@ -113,11 +155,34 @@ const rubricCards = rubricConfigs
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#E6E2D6" />
-  <title>KOLBOVSKIY.CLUB — частное медиа / публичный архив</title>
+  <meta name="theme-color" content="#F0EDE6" />
+  <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <title>{siteTitle}</title>
+  <meta name="description" content={siteDescription} />
+  <meta name="author" content="Nikita Kolbovskiy" />
+  <link rel="author" href="https://kolbovskiy.com/" />
+  <link rel="me" href="https://kolbovskiy.com/" />
+  <link rel="me" href="https://kolbovskiy.pics/" />
+  <link rel="me" href="https://t.me/klb_clb" />
+  <link rel="canonical" href={siteCanonical} />
+  <link rel="alternate" type="application/rss+xml" title="kolbovskiy.club RSS" href={`${siteUrl}/rss.xml`} />
+<meta property="og:type" content="website" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:site_name" content="kolbovskiy.club" />
+  <meta property="og:title" content={siteTitle} />
+  <meta property="og:description" content={siteDescription} />
+  <meta property="og:url" content={siteCanonical} />
+  <meta property="og:image" content={siteOgImage} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={siteTitle} />
+  <meta name="twitter:description" content={siteDescription} />
+  <meta name="twitter:image" content={siteOgImage} />
+  <script type="application/ld+json" set:html={JSON.stringify(webSiteJsonLd)}></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap');
-    @font-face{font-family:DAMN;src:url('/fonts/DAMN.otf') format('opentype');font-weight:400;font-style:normal;font-display:block}
+    @font-face{font-family:DAMN;src:url('/fonts/DAMN.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block;font-synthesis:none}
 
     :root{
       --red:#d10b0b;
@@ -134,10 +199,22 @@ const rubricCards = rubricConfigs
       --pad:clamp(20px,4vw,56px);
       --col:min(680px,calc(100vw - var(--pad)*2));
       --ease:cubic-bezier(.16,1,.3,1);
+      --motion-instant:.12s;
+      --motion-fast:.18s;
+      --motion-ui:.25s;
+      --motion-hover:.35s;
+      --motion-panel:.52s;
+      --motion-sweep:.55s;
+      --motion-pulse:1.8s;
+      --motion-rail:2.4s;
+      --motion-ticker:42s;
+      --motion-word:1s;
+      --motion-wave-a:24s;
+      --motion-wave-b:26s;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
-    html{background:var(--white);color:var(--black);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth}
+    html{background:var(--white);color:var(--black);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;font-synthesis:none;text-rendering:optimizeLegibility;scroll-behavior:smooth}
     body{min-height:100vh;background:var(--black);overflow-x:hidden;font-family:var(--font-ui)}
     main{position:relative;z-index:2;background:var(--white)}
     a{color:inherit;text-decoration:none}
@@ -147,10 +224,10 @@ const rubricCards = rubricConfigs
     .red{color:var(--red)}
     .dim{color:var(--muted)}
     .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);vertical-align:middle;flex:0 0 auto}
-    .dot-pulse{animation:pulse 1.8s infinite}
+    .dot-pulse{animation:pulse var(--motion-pulse) infinite}
     @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.32);opacity:.55}}
 
-    .arrow-icon{display:inline-block;width:42px;height:12px;background:currentColor;transition:transform .35s var(--ease);-webkit-mask:url('/assets/Arrow.png') center/contain no-repeat;mask:url('/assets/Arrow.png') center/contain no-repeat}
+    .arrow-icon{display:inline-block;width:42px;height:12px;background:currentColor;transition:transform var(--motion-hover) var(--ease);-webkit-mask:url('/assets/Arrow.png') center/contain no-repeat;mask:url('/assets/Arrow.png') center/contain no-repeat}
 
     /* HEADER */
     .site-header{position:sticky;top:0;z-index:100;height:92px;overflow:visible;background:transparent;border-bottom:0}
@@ -162,24 +239,24 @@ const rubricCards = rubricConfigs
     .top-note{white-space:nowrap;color:var(--muted)}
     .brand-logo{justify-self:center;display:flex;align-items:center;line-height:0}
     .logo-img{display:block;width:min(226px,32vw);height:auto}
-    .tg-link{color:var(--black);transition:color .25s var(--ease)}
+    .tg-link{color:var(--black);transition:color var(--motion-ui) var(--ease)}
     .tg-link:hover{color:var(--red)}
 
-    .nav-row{position:absolute;left:0;right:0;top:58px;z-index:1;height:34px;padding:0 var(--pad);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-top:1px solid rgba(10,10,9,.08);border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:rgba(240,237,230,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform:translateY(0);opacity:1;transition:transform .58s var(--ease),opacity .38s var(--ease)}
+    .nav-row{position:absolute;left:0;right:0;top:58px;z-index:1;height:34px;padding:0 var(--pad);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-top:1px solid rgba(10,10,9,.08);border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:rgba(240,237,230,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform:translateY(0);opacity:1;transition:transform var(--motion-sweep) var(--ease),opacity var(--motion-hover) var(--ease)}
     .nav-row-hidden .site-header{height:58px}
     .nav-row-hidden .nav-row{transform:translateY(-100%);opacity:0;pointer-events:none}
     .nav-core{grid-column:2;display:flex;align-items:center;justify-content:center;gap:26px}
-    .nav-row a{transition:color .25s var(--ease)}
+    .nav-row a{transition:color var(--motion-ui) var(--ease)}
     .nav-row a:hover{color:var(--red)}
-    .search-inline{grid-column:3;justify-self:end;border:0;background:transparent;color:var(--black);cursor:pointer;text-transform:uppercase;font-size:10px;letter-spacing:.14em;border-bottom:1px solid rgba(10,10,9,.28);padding-bottom:2px;transition:color .25s var(--ease),border-color .25s var(--ease)}
+    .search-inline{grid-column:3;justify-self:end;border:0;background:transparent;color:var(--black);cursor:pointer;text-transform:uppercase;font-size:10px;letter-spacing:.14em;border-bottom:1px solid rgba(10,10,9,.28);padding-bottom:2px;transition:color var(--motion-ui) var(--ease),border-color var(--motion-ui) var(--ease)}
     .search-inline:hover{color:var(--red);border-color:var(--red)}
 
     .mobile-menu-toggle{display:none;width:38px;height:38px;border:0;background:transparent;padding:0;cursor:pointer;align-items:center;justify-content:center}
-    .skull{width:26px;height:26px;display:block;background:url('/assets/apple-touch-icon.png') center/contain no-repeat;transition:transform .45s var(--ease),background-image .25s var(--ease)}
+    .skull{width:26px;height:26px;display:block;background:url('/assets/apple-touch-icon.png') center/contain no-repeat;transition:transform var(--motion-hover) var(--ease),background-image var(--motion-ui) var(--ease)}
     .menu-open .skull{transform:rotate(180deg);background-image:url('/assets/apple-touch-icon_red.png')}
     .menu-open{overflow:hidden}
 
-    .mobile-panel{position:fixed;left:0;right:0;top:92px;z-index:95;background:var(--red);color:var(--white);transform:translateY(-120%);transition:transform .52s var(--ease);border-bottom:1px solid var(--black);padding:32px var(--pad) 38px;max-height:calc(100dvh - 92px);overflow:auto}
+    .mobile-panel{position:fixed;left:0;right:0;top:92px;z-index:95;background:var(--red);color:var(--white);transform:translateY(-120%);transition:transform var(--motion-panel) var(--ease);border-bottom:1px solid var(--black);padding:32px var(--pad) 38px;max-height:calc(100dvh - 92px);overflow:auto}
     .menu-open .mobile-panel{transform:translateY(0)}
     .mobile-panel-inner{width:100%;margin:0}
     .mobile-panel__head{display:flex;justify-content:space-between;gap:20px;margin-bottom:28px;color:rgba(240,237,230,.78);font-size:10px;line-height:1.35;letter-spacing:.16em;text-transform:uppercase;text-align:left}
@@ -194,21 +271,25 @@ const rubricCards = rubricConfigs
     .search-box{width:min(1180px,calc(100vw - var(--pad)*2));max-width:1180px;margin:0 auto;display:grid;gap:26px}
     .search-head{display:flex;justify-content:space-between;gap:20px;align-items:center;color:rgba(240,237,230,.62);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
     .search-close{width:42px;height:42px;border:0;background:transparent;color:var(--white);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .search-close-icon{display:block;width:26px;height:26px;background:rgba(240,237,230,.86);-webkit-mask:url('/assets/Cross_45.png') center/contain no-repeat;mask:url('/assets/Cross_45.png') center/contain no-repeat;transition:transform .45s var(--ease),background .25s var(--ease)}
+    .search-close-icon{display:block;width:26px;height:26px;background:rgba(240,237,230,.86);-webkit-mask:url('/assets/Cross_45.png') center/contain no-repeat;mask:url('/assets/Cross_45.png') center/contain no-repeat;transition:transform var(--motion-hover) var(--ease),background var(--motion-ui) var(--ease)}
     .search-close:hover .search-close-icon{background:var(--red);transform:rotate(90deg) scale(1.08)}
     .search-input{width:100%;border:0;border-bottom:1px solid rgba(240,237,230,.42);background:transparent;color:var(--white);font-size:clamp(28px,6vw,72px);line-height:1.05;padding:12px 34px 18px 0;outline:0;text-transform:uppercase;letter-spacing:-.03em;-webkit-appearance:none;appearance:none}
     .search-input::placeholder{color:transparent}
     .search-input::-webkit-search-decoration{display:none}
-    .search-input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;width:18px;height:18px;background:rgba(240,237,230,.72);-webkit-mask:url('/assets/Cross_45.png') center/contain no-repeat;mask:url('/assets/Cross_45.png') center/contain no-repeat;cursor:pointer;transition:background .25s var(--ease),transform .35s var(--ease)}
-    .search-input::-webkit-search-cancel-button:hover{background:var(--red);transform:rotate(90deg)}
+    .search-input::-webkit-search-cancel-button{-webkit-appearance:none!important;appearance:none!important;width:18px;height:18px;background:rgba(240,237,230,.72)!important;-webkit-mask:url('/assets/Cross_45.png') center/contain no-repeat;mask:url('/assets/Cross_45.png') center/contain no-repeat;cursor:pointer;transition:background var(--motion-ui) var(--ease),transform var(--motion-hover) var(--ease)}
+    .search-input::-webkit-search-cancel-button:hover{background:var(--red)!important;transform:rotate(90deg)}
     .search-input::-ms-clear{display:none;width:0;height:0}
+    .search-input::-ms-reveal{display:none;width:0;height:0}
+    .search-input::-webkit-contacts-auto-fill-button,
+    .search-input::-webkit-credentials-auto-fill-button{visibility:hidden;display:none!important;pointer-events:none;position:absolute;right:0}
     .search-results{display:grid;border-top:1px solid rgba(240,237,230,.25)}
     .search-result{display:grid;grid-template-columns:80px 120px 1fr 28px;gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid rgba(240,237,230,.18);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(240,237,230,.68)}
     .search-result b{color:var(--white);font-weight:500;text-transform:none;letter-spacing:0;font-size:14px}
     .search-result .rub{color:var(--red)}
     .search-result .go{display:flex;justify-content:flex-end;align-items:center;color:var(--red)}
-    .search-triangle{display:block;width:16px;height:16px;background:var(--red);clip-path:polygon(0 0,100% 50%,0 100%);transition:transform .35s var(--ease),opacity .25s var(--ease);opacity:.86}
+    .search-triangle{display:block;width:16px;height:16px;background:var(--red);clip-path:polygon(0 0,100% 50%,0 100%);transition:transform var(--motion-hover) var(--ease),opacity var(--motion-ui) var(--ease);opacity:.86}
     .search-result:hover .search-triangle{transform:translateX(7px);opacity:1}
+    .search-empty{padding:18px 0;border-bottom:1px solid rgba(240,237,230,.18);color:rgba(240,237,230,.55);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
 
     /* HERO */
     .hero{position:relative;min-height:calc(100vh - 92px);overflow:hidden;background:#1b120e;color:var(--white);border-bottom:1px solid var(--black)}
@@ -221,14 +302,14 @@ const rubricCards = rubricConfigs
     .hero-main{align-self:center;width:100%;max-width:none;position:relative;padding-top:0;transform:translateY(72px)}
     .hero-eyebrow{position:absolute;left:0;top:-76px;z-index:8;display:grid;grid-template-columns:12px max-content;align-items:center;column-gap:10px;width:max-content;max-width:100%;height:14px;padding:0;margin:0;background:transparent!important;border:0!important;box-shadow:none!important;color:var(--red);font-size:11px;line-height:14px;letter-spacing:.10em;text-transform:uppercase;white-space:nowrap;pointer-events:none}
     .hero-eyebrow .rubric-text{display:block;color:var(--red);font-weight:700;background:transparent!important;border:0!important;padding:0!important;margin:0!important;line-height:14px;white-space:nowrap}
-    .rubric-pulse{display:block;width:12px;height:12px;border-radius:50%;background:var(--red);animation:dotPulse 1.8s infinite;transform:none!important}
+    .rubric-pulse{display:block;width:12px;height:12px;border-radius:50%;background:var(--red);animation:dotPulse var(--motion-pulse) infinite;transform:none!important}
     @keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.42}}
     .hero-title-row{position:relative;width:100%;max-width:none;display:grid;grid-template-columns:minmax(0,max-content) 1fr;align-items:start;column-gap:clamp(28px,7vw,110px);font-size:clamp(112px,15.5vw,248px);line-height:.78}
     .hero-title{font-family:var(--font-display);font-weight:400;color:var(--red);font-size:1em;line-height:.78;letter-spacing:-.018em;text-transform:uppercase;text-shadow:none;-webkit-text-stroke:0;paint-order:normal;height:auto;overflow:visible;justify-self:start}
     .hero-title-rail{position:relative;display:block;width:1px;height:.68em;margin-top:-.045em;background:rgba(240,237,230,.34);overflow:hidden;justify-self:end;align-self:start}
-    .hero-title-rail span{position:absolute;left:0;top:-38%;display:block;width:1px;height:38%;background:var(--red);animation:titleRailRun 2.4s ease-in-out infinite}
+    .hero-title-rail span{position:absolute;left:0;top:-38%;display:block;width:1px;height:38%;background:var(--red);animation:titleRailRun var(--motion-rail) ease-in-out infinite}
     @keyframes titleRailRun{0%{transform:translateY(0)}55%,100%{transform:translateY(365%)}}
-    .hero-title span{display:inline-block;animation:none!important;transform:none!important;backface-visibility:hidden;-webkit-font-smoothing:antialiased}
+    .hero-title span{display:inline-block;animation:none!important;transform:none!important;-webkit-font-smoothing:antialiased}
     .hero-title-gap{display:inline!important;width:.08em}
     .hero-sub{max-width:700px;margin-top:18px;color:var(--white);font-size:clamp(17px,1.75vw,24px);font-style:italic;line-height:1.36;text-shadow:0 1px 18px rgba(0,0,0,.34)}
     .hero-lede{max-width:590px;margin-top:14px;color:rgba(240,237,230,.72);font-size:14px;line-height:1.56;font-style:italic;text-shadow:0 1px 16px rgba(0,0,0,.30)}
@@ -241,7 +322,7 @@ const rubricCards = rubricConfigs
     .hero-scroll-rail{display:none}
 
     .ticker{border-top:1px solid var(--white);border-bottom:1px solid var(--white);background:var(--black);color:var(--white);overflow:hidden;white-space:nowrap;display:flex;padding:14px 0}
-    .ticker-track{display:inline-flex;gap:56px;padding-left:56px;animation:tick 42s linear infinite;font-weight:500;font-size:14px;letter-spacing:.12em;text-transform:uppercase;flex-shrink:0}
+    .ticker-track{display:inline-flex;gap:56px;padding-left:56px;animation:tick var(--motion-ticker) linear infinite;font-weight:500;font-size:14px;letter-spacing:.12em;text-transform:uppercase;flex-shrink:0}
     .ticker-track .sep{color:var(--red)}
     @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
@@ -258,7 +339,7 @@ const rubricCards = rubricConfigs
 
     /* FRESH */
     .fresh-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--black);border-left:1px solid var(--line)}
-    .fresh-card{position:relative;min-height:320px;padding:26px 24px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:18px;overflow:hidden;background:rgba(240,237,230,.24);transition:background .25s var(--ease),transform .35s var(--ease)}
+    .fresh-card{position:relative;min-height:320px;padding:26px 24px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:18px;overflow:hidden;background:rgba(240,237,230,.24);transition:background var(--motion-ui) var(--ease),transform var(--motion-hover) var(--ease)}
     .fresh-card.has-image{background-image:var(--fresh-image);background-size:100% auto;background-position:center var(--fresh-y,center);background-repeat:no-repeat}
     .fresh-card:before{content:"";position:absolute;inset:0;z-index:0;opacity:.48;background:repeating-linear-gradient(0deg,rgba(10,10,9,.06) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(10,10,9,.06) 0 1px,transparent 1px 28px)}
     .fresh-card:after{content:"";position:absolute;right:18px;top:18px;width:7px;height:7px;border-radius:50%;background:var(--red);z-index:1}
@@ -287,13 +368,13 @@ const rubricCards = rubricConfigs
     .best-main-cover .cover-meta{position:absolute;left:24px;right:24px;bottom:24px;z-index:2;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
     .best-album-note{max-width:var(--col);margin:0 0 20px;color:var(--black);font-size:clamp(16px,1.15vw,18px);line-height:1.55;font-style:normal}
     .best-list{display:grid;border-top:1px solid var(--black)}
-    .best-list a{display:grid;grid-template-columns:42px 1fr auto;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);transition:padding-left .35s var(--ease)}
+    .best-list a{display:grid;grid-template-columns:42px 1fr auto;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);transition:padding-left var(--motion-hover) var(--ease)}
     .best-list a:hover{padding-left:10px}
     .best-list .num{color:var(--red);font-size:12px;letter-spacing:.10em;font-weight:700}
     .best-list .ttl{font-size:14px;line-height:1.35;font-weight:700;font-style:italic;color:var(--black)}
     .best-list .go{color:var(--red)}
     .issue-covers{display:flex;flex-direction:column;border-top:1px solid var(--black)}
-    .issue-cover{position:relative;display:grid;grid-template-columns:112px 1fr auto;gap:22px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);background:transparent;overflow:visible;transition:padding-left .45s var(--ease)}
+    .issue-cover{position:relative;display:grid;grid-template-columns:112px 1fr auto;gap:22px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);background:transparent;overflow:visible;transition:padding-left var(--motion-hover) var(--ease)}
     .issue-cover:hover{padding-left:18px}
     .issue-cover-thumb{position:relative;width:112px;height:112px;border:1px solid var(--line-strong);background:rgba(240,237,230,.26);overflow:hidden;flex:0 0 auto}
     .issue-cover-image{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -314,12 +395,12 @@ const rubricCards = rubricConfigs
     .archive-head{padding:14px 0;border-top:1px solid var(--black);border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
     .archive-head span:nth-child(5),.archive-head span:nth-child(6){text-align:right}
     .row{position:relative;overflow:hidden;padding:18px 0;border-bottom:1px solid var(--line);font-size:14px}
-    .row:before{content:"";position:absolute;left:-100%;top:0;bottom:0;width:100%;background:linear-gradient(90deg,transparent 0%,rgba(209,11,11,.10) 25%,rgba(209,11,11,.20) 100%);transition:left .55s var(--ease);pointer-events:none}
+    .row:before{content:"";position:absolute;left:-100%;top:0;bottom:0;width:100%;background:linear-gradient(90deg,transparent 0%,rgba(209,11,11,.10) 25%,rgba(209,11,11,.20) 100%);transition:left var(--motion-sweep) var(--ease);pointer-events:none}
     .row:hover:before{left:0}
     .row>*{position:relative;z-index:1}
     .row .no,.row .date,.row .rub,.row .min{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
     .row .rub{color:var(--red)}
-    .row .ttl{font-weight:500;font-size:15px;line-height:1.35;transition:transform .35s var(--ease)}
+    .row .ttl{font-weight:500;font-size:15px;line-height:1.35;transition:transform var(--motion-hover) var(--ease)}
     .row .ttl em{color:var(--muted);font-style:italic;font-weight:400}
     .row:hover .ttl{transform:translateX(8px)}
     .row .min{text-align:right}.row .go{color:var(--red);text-align:right}
@@ -332,10 +413,10 @@ const rubricCards = rubricConfigs
     /* RUBRICS */
     .rubrics-wrap{padding-bottom:clamp(36px,4vw,56px)}
     .rubrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));max-width:1180px;margin:0 auto;border-top:1px solid var(--black);border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--white)}
-    .rubric{min-height:288px;padding:24px 20px 20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:-1px;display:flex;flex-direction:column;transition:background .25s var(--ease)}
+    .rubric{min-height:288px;padding:24px 20px 20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:-1px;display:flex;flex-direction:column;transition:background var(--motion-ui) var(--ease)}
     .rubric:nth-child(6n){border-right:0}
     .rubric:hover{background:#E6E2D6}
-    .rubric-mark{font-family:var(--font-display);color:var(--red);font-size:clamp(62px,6.8vw,108px);line-height:.76;margin-bottom:18px;transition:none;font-weight:400;text-shadow:none;-webkit-text-stroke:0;backface-visibility:hidden}
+    .rubric-mark{font-family:var(--font-display);color:var(--red);font-size:clamp(62px,6.8vw,108px);line-height:.76;margin-bottom:18px;transition:none;font-weight:400;text-shadow:none;-webkit-text-stroke:0;}
     .rubric:hover .rubric-mark{transform:none}
     .rubric-name{font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
     .rubric-desc{color:var(--muted);font-style:italic;font-size:12px;line-height:1.5;min-height:88px}
@@ -350,12 +431,12 @@ const rubricCards = rubricConfigs
     .foot-cta:hover .arrow-icon{transform:translateX(10px)}
     .foot-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:end;width:100%;padding:0 0 24px}
     .foot-credits{display:grid;gap:9px;color:rgba(240,237,230,.54);font-size:11px;line-height:1.55;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
-    .foot-credits a{color:rgba(240,237,230,.78);text-decoration:none;border-bottom:1px solid rgba(240,237,230,.28);transition:color .25s var(--ease),border-color .25s var(--ease)}
+    .foot-credits a{color:rgba(240,237,230,.78);text-decoration:none;border-bottom:1px solid rgba(240,237,230,.28);transition:color var(--motion-ui) var(--ease),border-color var(--motion-ui) var(--ease)}
     .foot-credits a:hover{color:var(--red);border-color:var(--red)}
     .age-mark{justify-self:end;align-self:end;color:var(--white);font-weight:700;font-size:clamp(16px,1.4vw,22px);line-height:1;letter-spacing:.04em;text-transform:uppercase}
     .foot-bottom{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;width:100%;height:58px;border-top:1px solid rgba(240,237,230,.18);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:rgba(240,237,230,.54)}
     .foot-bottom-links{display:none}
-    .foot-bottom a{color:rgba(240,237,230,.72);text-decoration:none;transition:color .25s var(--ease)}
+    .foot-bottom a{color:rgba(240,237,230,.72);text-decoration:none;transition:color var(--motion-ui) var(--ease)}
     .foot-bottom a:hover{color:var(--red)}
 
     @media(max-width:1100px){
@@ -393,9 +474,9 @@ const rubricCards = rubricConfigs
       text-shadow:none!important;
       -webkit-text-stroke:0!important;
       filter:none!important;
-      transform:translateZ(0);
-      backface-visibility:hidden;
-      -webkit-font-smoothing:antialiased;
+      
+      
+      -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;font-synthesis:none;
     }
 
     /* SECTION HEADS v26 — previous mobile layout, counter aligned with title row */
@@ -719,7 +800,7 @@ const rubricCards = rubricConfigs
       transform:translateY(0)!important;
       opacity:1!important;
       pointer-events:auto!important;
-      transition:transform .52s var(--ease), opacity .28s var(--ease)!important;
+      transition:transform var(--motion-panel) var(--ease), opacity var(--motion-hover) var(--ease)!important;
       will-change:transform, opacity;
     }
     .nav-is-scrolling .site-header,
@@ -749,7 +830,7 @@ const rubricCards = rubricConfigs
 
     /* MENU PROGRESS v41 — same topbar/nav divider as article */
     .progress{position:fixed;left:0;right:0;top:58px;z-index:130;height:2px;background:rgba(10,10,9,.14);pointer-events:none}
-    .progress-fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--red);transition:width .12s linear}
+    .progress-fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--red);transition:width var(--motion-instant) linear}
     @media(max-width:760px){.progress{top:56px}}
 
       /* HERO META v36 — account for revealed nav overlay */
@@ -940,7 +1021,7 @@ body.menu-open .mobile-panel{
       height:12px!important;
       color:var(--red)!important;
       transform:none;
-      transition:transform .35s var(--ease), opacity .25s var(--ease)!important;
+      transition:transform var(--motion-hover) var(--ease), opacity var(--motion-ui) var(--ease)!important;
     }
     .row:hover .go .arrow-icon,
     .best-list a:hover .go .arrow-icon{
@@ -1430,7 +1511,519 @@ body.menu-open .mobile-panel{
       }
     }
 
-  </style>
+
+    /* INDEX FRESH PATCH v7 — 4 vertical cards / ticker text / namolnii */
+    .fresh-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr))!important;
+      gap:0!important;
+    }
+    .fresh-card,
+    .fresh-card.has-image{
+      position:relative!important;
+      min-height:0!important;
+      padding:22px 22px 20px!important;
+      display:grid!important;
+      grid-template-rows:auto auto auto 1fr auto!important;
+      gap:12px!important;
+      align-content:start!important;
+      background:rgba(240,237,230,.24)!important;
+      background-image:none!important;
+      background-size:auto!important;
+      background-position:center center!important;
+      background-repeat:no-repeat!important;
+      transform:none!important;
+    }
+    .fresh-card:hover{
+      transform:translateY(-3px)!important;
+    }
+    .fresh-card:before{
+      content:""!important;
+      position:absolute!important;
+      inset:0!important;
+      z-index:0!important;
+      opacity:.38!important;
+      background:repeating-linear-gradient(0deg,rgba(10,10,9,.05) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(10,10,9,.05) 0 1px,transparent 1px 28px)!important;
+    }
+    .fresh-card:after{
+      right:16px!important;
+      top:16px!important;
+    }
+    .fresh-card > *{
+      position:relative!important;
+      z-index:1!important;
+    }
+    .fresh-media{
+      position:relative;
+      display:block;
+      width:100%;
+      aspect-ratio: 0.76 / 1;
+      overflow:hidden;
+      border:1px solid var(--line-strong);
+      background:rgba(10,10,9,.05);
+    }
+    .fresh-media.has-image{
+      background:rgba(10,10,9,.06);
+    }
+    .fresh-media.has-image::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(10,10,9,.02) 0%,rgba(10,10,9,.12) 100%);
+      pointer-events:none;
+    }
+    .fresh-media-image{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+    }
+    .fresh-media.no-image{
+      background:linear-gradient(180deg,rgba(10,10,9,.02) 0%,rgba(10,10,9,.045) 100%);
+    }
+    .fresh-media-pattern,
+    .fresh-media.no-image::before,
+    .fresh-media.no-image::after{
+      position:absolute;
+      inset:0;
+      content:"";
+      display:block;
+      pointer-events:none;
+    }
+    .fresh-media.no-image::before{
+      opacity:.20;
+      background:
+        linear-gradient(23deg, transparent 48.5%, rgba(10,10,9,.15) 49%, rgba(10,10,9,.15) 51%, transparent 51.5%) 12% 18%/36px 24px no-repeat,
+        linear-gradient(-34deg, transparent 47.5%, rgba(10,10,9,.11) 48%, rgba(10,10,9,.11) 52%, transparent 52.5%) 74% 16%/28px 18px no-repeat,
+        linear-gradient(61deg, transparent 47.5%, rgba(10,10,9,.12) 48%, rgba(10,10,9,.12) 52%, transparent 52.5%) 46% 28%/22px 18px no-repeat,
+        linear-gradient(-18deg, transparent 47.5%, rgba(10,10,9,.10) 48%, rgba(10,10,9,.10) 52%, transparent 52.5%) 21% 52%/30px 20px no-repeat,
+        linear-gradient(42deg, transparent 47.5%, rgba(10,10,9,.13) 48%, rgba(10,10,9,.13) 52%, transparent 52.5%) 66% 56%/26px 20px no-repeat,
+        linear-gradient(-52deg, transparent 47.5%, rgba(10,10,9,.09) 48%, rgba(10,10,9,.09) 52%, transparent 52.5%) 38% 74%/24px 18px no-repeat,
+        linear-gradient(11deg, transparent 47.5%, rgba(10,10,9,.10) 48%, rgba(10,10,9,.10) 52%, transparent 52.5%) 80% 78%/32px 22px no-repeat;
+    }
+    .fresh-media.no-image::after{
+      opacity:.12;
+      background:repeating-linear-gradient(0deg,rgba(10,10,9,.08) 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,rgba(10,10,9,.08) 0 1px,transparent 1px 32px);
+    }
+    .fresh-card .no{
+      margin-top:2px!important;
+      font-size:11px!important;
+      line-height:1.35!important;
+    }
+    .fresh-card h3{
+      font-size:clamp(34px,3.1vw,54px)!important;
+      line-height:.88!important;
+      color:var(--black)!important;
+      margin:0!important;
+    }
+    .fresh-card p{
+      margin-top:0!important;
+      max-width:none!important;
+      color:var(--muted)!important;
+      font-size:12px!important;
+      line-height:1.52!important;
+      min-height:4.5em;
+    }
+    .fresh-card .go{
+      align-self:start!important;
+      color:var(--red)!important;
+      margin-top:4px!important;
+    }
+    .fresh-card .go .arrow-icon{
+      color:var(--red)!important;
+      background:currentColor!important;
+    }
+    @media(max-width:1040px){
+      .fresh-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+      }
+    }
+    @media(max-width:760px){
+      .fresh-grid{
+        grid-template-columns:1fr!important;
+      }
+      .fresh-card,
+      .fresh-card.has-image{
+        padding:20px 20px 18px!important;
+      }
+      .fresh-media{
+        aspect-ratio: 1 / 1.08;
+      }
+      .fresh-card h3{
+        font-size:clamp(36px,11vw,62px)!important;
+      }
+      .fresh-card p{
+        min-height:0;
+      }
+    }
+
+
+    /* INDEX FRESH PATCH v8 — only image articles / dark VHS cards / white text flap */
+    .fresh-grid{
+      grid-template-columns:repeat(4,minmax(0,1fr))!important;
+      gap:0!important;
+      border-top:1px solid var(--black)!important;
+      border-left:1px solid rgba(240,237,230,.18)!important;
+      background:#F0EDE6!important;
+    }
+    .fresh-card,
+    .fresh-card.has-image{
+      position:relative!important;
+      min-height:0!important;
+      padding:0!important;
+      display:grid!important;
+      grid-template-rows:auto 1fr!important;
+      gap:0!important;
+      align-content:start!important;
+      overflow:hidden!important;
+      background:#F0EDE6!important;
+      background-image:none!important;
+      color:var(--white)!important;
+      border-right:1px solid rgba(240,237,230,.20)!important;
+      border-bottom:1px solid rgba(240,237,230,.20)!important;
+      transition:transform var(--motion-hover) var(--ease), background var(--motion-ui) var(--ease)!important;
+    }
+    .fresh-card:hover{
+      transform:translateY(-3px)!important;
+      background:#F0EDE6!important;
+    }
+    .fresh-card:before{
+      display:none!important;
+      content:none!important;
+      background:none!important;
+    }
+    .fresh-card:after{
+      content:""!important;
+      position:absolute!important;
+      right:16px!important;
+      top:16px!important;
+      width:7px!important;
+      height:7px!important;
+      border-radius:50%!important;
+      background:var(--red)!important;
+      z-index:3!important;
+    }
+    .fresh-card > *{
+      position:relative!important;
+      z-index:1!important;
+    }
+    .fresh-media{
+      display:block!important;
+      width:100%!important;
+      aspect-ratio:1 / 1.04!important;
+      overflow:hidden!important;
+      border:0!important;
+      background:#F0EDE6!important;
+    }
+    .fresh-media.has-image::after,
+    .fresh-media.no-image::before,
+    .fresh-media.no-image::after,
+    .fresh-media-pattern{
+      display:none!important;
+      content:none!important;
+      background:none!important;
+    }
+    .fresh-media-image{
+      width:100%!important;
+      height:100%!important;
+      display:block!important;
+      object-fit:cover!important;
+      border:0!important;
+    }
+    .fresh-body{
+      display:grid!important;
+      grid-template-rows:auto auto 1fr auto!important;
+      gap:10px!important;
+      min-height:190px!important;
+      padding:18px 18px 18px!important;
+      background:var(--white)!important;
+      color:var(--black)!important;
+    }
+    .fresh-card .no{
+      margin:0!important;
+      color:var(--red)!important;
+      font-size:11px!important;
+      line-height:1.35!important;
+      letter-spacing:.12em!important;
+      text-transform:uppercase!important;
+      font-weight:700!important;
+    }
+    .fresh-card h3{
+      margin:0!important;
+      color:var(--black)!important;
+      font-size:clamp(34px,3vw,52px)!important;
+      line-height:.88!important;
+      letter-spacing:-.012em!important;
+      text-transform:uppercase!important;
+      text-shadow:none!important;
+      -webkit-text-stroke:0!important;
+    }
+    .fresh-card p{
+      margin:0!important;
+      max-width:none!important;
+      color:var(--muted)!important;
+      font-size:12px!important;
+      line-height:1.52!important;
+      font-style:italic!important;
+    }
+    .fresh-card .go{
+      align-self:end!important;
+      display:flex!important;
+      align-items:center!important;
+      gap:12px!important;
+      margin:4px 0 0!important;
+      color:var(--red)!important;
+      font-size:11px!important;
+      line-height:1!important;
+      text-transform:uppercase!important;
+      letter-spacing:.12em!important;
+      font-weight:700!important;
+    }
+    .fresh-card .go .arrow-icon{
+      color:var(--red)!important;
+      background:currentColor!important;
+    }
+    .fresh-card:hover .arrow-icon{
+      transform:translateX(8px)!important;
+    }
+    @media(max-width:1040px){
+      .fresh-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+      }
+      .fresh-media{
+        aspect-ratio:1 / .82!important;
+      }
+    }
+    @media(max-width:760px){
+      .fresh-grid{
+        grid-template-columns:1fr!important;
+      }
+      .fresh-media{
+        aspect-ratio:1 / .72!important;
+      }
+      .fresh-body{
+        min-height:0!important;
+        padding:18px 18px 17px!important;
+      }
+      .fresh-card h3{
+        font-size:clamp(38px,11vw,62px)!important;
+      }
+    }
+
+
+    /* FRESH TYPOGRAPHY FIX v8 — dark-card scheme fonts restored */
+    .fresh-body,
+    .fresh-body *{
+      font-family:var(--font-ui)!important;
+    }
+    .fresh-card h3,
+    .fresh-card h3 *{
+      font-family:var(--font-display)!important;
+      font-weight:400!important;
+      font-style:normal!important;
+      letter-spacing:-.012em!important;
+      text-transform:uppercase!important;
+    }
+    .fresh-card .no,
+    .fresh-card p,
+    .fresh-card .go,
+    .fresh-card .go *{
+      font-family:var(--font-ui)!important;
+    }
+
+
+    /* FRESH COLOR FIX v9 — branded white flap */
+    .fresh-body{
+      background:var(--white)!important;
+      color:var(--black)!important;
+    }
+    .fresh-card.has-image .fresh-body h3,
+    .fresh-card .fresh-body h3{
+      color:var(--black)!important;
+      -webkit-text-stroke:0!important;
+      text-shadow:none!important;
+    }
+    .fresh-card.has-image .fresh-body p,
+    .fresh-card .fresh-body p{
+      color:var(--muted)!important;
+    }
+    .fresh-card.has-image .fresh-body .go,
+    .fresh-card .fresh-body .go,
+    .fresh-card.has-image .fresh-body .go *,
+    .fresh-card .fresh-body .go *{
+      color:var(--red)!important;
+    }
+    .fresh-card.has-image .fresh-body .go .arrow-icon,
+    .fresh-card .fresh-body .go .arrow-icon{
+      background:currentColor!important;
+    }
+    .fresh-card.has-image .fresh-body .no,
+    .fresh-card .fresh-body .no{
+      color:var(--red)!important;
+    }
+
+
+    /* MOBILE HERO IMAGE FIX v10 — fit by height, not width */
+    @media(max-width:760px){
+      .hero-bg img{
+        left:50%!important;
+        top:50%!important;
+        width:auto!important;
+        height:100%!important;
+        min-width:0!important;
+        min-height:100%!important;
+        max-width:none!important;
+        transform:translate(-50%,-50%)!important;
+        object-fit:cover!important;
+      }
+    }
+
+
+    /* INTERMEDIATE HERO IMAGE FIX v11 — tablets / narrow desktops fit by height */
+    @media(min-width:761px) and (max-width:1180px){
+      .hero-bg img{
+        left:50%!important;
+        top:50%!important;
+        width:auto!important;
+        height:100%!important;
+        min-width:0!important;
+        min-height:100%!important;
+        max-width:none!important;
+        transform:translate(-50%,-50%)!important;
+        object-fit:cover!important;
+      }
+    }
+
+    @media(min-width:1181px) and (max-aspect-ratio: 4 / 3){
+      .hero-bg img{
+        left:50%!important;
+        top:50%!important;
+        width:auto!important;
+        height:100%!important;
+        min-width:0!important;
+        min-height:100%!important;
+        max-width:none!important;
+        transform:translate(-50%,-50%)!important;
+        object-fit:cover!important;
+      }
+    }
+
+
+    /* HERO FOOT META ALIGN v11 — label starts at first thesis line */
+    .hero-filemeta > span{
+      display:grid!important;
+      grid-template-columns:max-content minmax(0,1fr)!important;
+      column-gap:7px!important;
+      align-items:start!important;
+      max-width:min(980px,calc(100vw - var(--pad)*2 - 88px))!important;
+    }
+    .hero-filemeta > span > b{
+      display:block!important;
+      line-height:1.35!important;
+      align-self:start!important;
+      white-space:nowrap!important;
+    }
+    @media(max-width:760px){
+      .hero-filemeta > span{
+        max-width:calc(100vw - var(--pad)*2 - 28px)!important;
+      }
+    }
+
+
+    /* SEARCH DYNAMIC RESULTS FIX v11 — JS-rendered rows must not fall back to browser purple links */
+    :global(.search-panel .search-results){
+      display:grid!important;
+      border-top:1px solid rgba(240,237,230,.25)!important;
+    }
+    :global(.search-panel .search-result){
+      display:grid!important;
+      grid-template-columns:80px 120px 1fr 28px!important;
+      gap:18px!important;
+      align-items:center!important;
+      padding:18px 0!important;
+      border-bottom:1px solid rgba(240,237,230,.18)!important;
+      font-family:var(--font-ui)!important;
+      font-size:12px!important;
+      line-height:1.25!important;
+      letter-spacing:.08em!important;
+      text-transform:uppercase!important;
+      color:rgba(240,237,230,.68)!important;
+      text-decoration:none!important;
+      background:transparent!important;
+    }
+    :global(.search-panel .search-result:visited),
+    :global(.search-panel .search-result:hover),
+    :global(.search-panel .search-result:focus){
+      color:rgba(240,237,230,.68)!important;
+      text-decoration:none!important;
+    }
+    :global(.search-panel .search-result span){
+      font-family:var(--font-ui)!important;
+      color:inherit!important;
+      text-decoration:none!important;
+    }
+    :global(.search-panel .search-result .rub){
+      color:var(--red)!important;
+    }
+    :global(.search-panel .search-result b){
+      font-family:var(--font-ui)!important;
+      color:var(--white)!important;
+      font-weight:500!important;
+      text-transform:none!important;
+      letter-spacing:0!important;
+      font-size:14px!important;
+      line-height:1.35!important;
+      text-decoration:none!important;
+    }
+    :global(.search-panel .search-result .go){
+      display:flex!important;
+      justify-content:flex-end!important;
+      align-items:center!important;
+      color:var(--red)!important;
+    }
+    :global(.search-panel .search-triangle){
+      display:block!important;
+      width:16px!important;
+      height:16px!important;
+      background:var(--red)!important;
+      clip-path:polygon(0 0,100% 50%,0 100%)!important;
+      transition:transform var(--motion-hover) var(--ease),opacity var(--motion-ui) var(--ease)!important;
+      opacity:.86!important;
+    }
+    :global(.search-panel .search-result:hover .search-triangle){
+      transform:translateX(7px)!important;
+      opacity:1!important;
+    }
+    :global(.search-panel .search-empty){
+      padding:18px 0!important;
+      border-bottom:1px solid rgba(240,237,230,.18)!important;
+      color:rgba(240,237,230,.55)!important;
+      font-family:var(--font-ui)!important;
+      font-size:12px!important;
+      line-height:1.35!important;
+      letter-spacing:.12em!important;
+      text-transform:uppercase!important;
+    }
+    @media(max-width:760px){
+      :global(.search-panel .search-result){
+        grid-template-columns:58px 1fr 28px!important;
+        gap:14px!important;
+      }
+      :global(.search-panel .search-result .rub){
+        display:none!important;
+      }
+    }
+
+
+    /* INDEX MOBILE MENU CANVAS COLOR
+       Exposed iPhone/Telegram area above the menu uses exact mobile menu color. */
+    @media(max-width:760px){
+      html{
+        background:#F0EDE6!important;
+        background-color:#F0EDE6!important;
+      }
+    }
+
+</style>
 </head>
 <body>
   <div class="progress" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
@@ -1450,16 +2043,17 @@ body.menu-open .mobile-panel{
     <div class="search-box">
       <div class="search-head"><span>Поиск по публикациям</span><button class="search-close" id="searchClose" type="button" aria-label="Закрыть поиск"><span class="search-close-icon" aria-hidden="true"></span></button></div>
       <input class="search-input" id="searchInput" type="search" placeholder="" aria-label="Поиск по публикациям" />
-      <div class="search-results">
-        {searchItems.map((item) => (
-          <a class="search-result" href={articleHref(item)}>
+      <div class="search-results" id="searchResults">
+        {searchSuggestions.map((item) => (
+          <a class="search-result" href={item.href}>
             <span>{item.issue}</span>
-            <span class="rub">{formatRubric(item.rubrics[0])}</span>
-            <b>{item.title}</b>
+            <span class="rub">{item.rubric}</span>
+            <b>{item.label}</b>
             <span class="go"><span class="search-triangle" aria-hidden="true"></span></span>
           </a>
         ))}
       </div>
+      <script type="application/json" id="searchIndex" is:inline set:html={JSON.stringify(searchIndex)}></script>
     </div>
   </aside>
 
@@ -1474,14 +2068,14 @@ body.menu-open .mobile-panel{
         <div class="hero-main">
           <div class="hero-eyebrow"><span class="rubric-pulse" aria-hidden="true"></span><span class="rubric-text">{formatRubrics(featuredArticle)}</span></div>
           <div class="hero-title-row"><h1 class="hero-title" aria-label={featuredArticle.title}><span>{heroTitle}</span></h1><div class="hero-title-rail" aria-hidden="true"><span></span></div></div>
-          <p class="hero-sub">{featuredArticle.description}</p>
+          <p class="hero-sub" set:html={heroCaptionHtml}></p>
           <a class="read-link" href={articleHref(featuredArticle)}>Читать <span class="arrow-icon" aria-hidden="true"></span></a>
         </div>
         <div class="hero-foot"><div class="hero-filemeta"><span><b>Тезис:</b> {featuredArticle.thesis}</span><span><b>Оптика:</b> {topicsLine(featuredArticle)}</span></div></div>
       </div>
     </section>
 
-    <div class="ticker" aria-hidden="true"><div class="ticker-track"><span>Частное медиа о Реальном мире</span><span class="sep">●</span><span>Архив авторских текстов</span><span class="sep">●</span><span>сигнал сильнее шума</span><span class="sep">●</span><span>{archiveTotal} проиндексированных материала</span><span class="sep">●</span><span>архив / досье / полевые заметки</span><span class="sep">●</span><span>In incerto we trust</span><span class="sep">●</span><span>Частное медиа о Реальном мире</span><span class="sep">●</span><span>Архив авторских текстов</span><span class="sep">●</span><span>сигнал сильнее шума</span><span class="sep">●</span><span>{archiveTotal} проиндексированных материала</span><span class="sep">●</span><span>архив / досье / полевые заметки</span><span class="sep">●</span><span>In incerto we trust</span><span class="sep">●</span></div></div>
+    <div class="ticker" aria-hidden="true"><div class="ticker-track"><span>Частное медиа о Реальном мире</span><span class="sep">●</span><span>сигнал сильнее шума</span><span class="sep">●</span><span>{archiveTotal} проиндексированных материалов</span><span class="sep">●</span><span>архив / эссе / полевые заметки</span><span class="sep">●</span><span>In incerto we trust</span><span class="sep">●</span><span>Частное медиа о Реальном мире</span><span class="sep">●</span><span>сигнал сильнее шума</span><span class="sep">●</span><span>{archiveTotal} проиндексированных материалов</span><span class="sep">●</span><span>архив / эссе / полевые заметки</span><span class="sep">●</span><span>In incerto we trust</span><span class="sep">●</span></div></div>
 
     <section class="section" id="fresh">
       <div class="section-inner">
@@ -1490,14 +2084,18 @@ body.menu-open .mobile-panel{
         <div class="fresh-grid">
           {freshArticles.map((item) => (
             <a
-              class:list={['fresh-card', item.heroImage && 'has-image']}
-              style={item.heroImage ? `--fresh-image:url('${item.heroImage}');--fresh-y:${imageFocusY(item)}` : undefined}
+              class="fresh-card has-image"
               href={articleHref(item)}
             >
-              <span class="no">{item.issue} / {formatRubric(item.rubrics[0])}</span>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-              <span class="go">читать <span class="arrow-icon" aria-hidden="true"></span></span>
+              <span class="fresh-media">
+                <img class="fresh-media-image" src={String(item.heroImage)} alt="" loading="lazy" decoding="async" style={`object-position:center ${imageFocusY(item)}`} />
+              </span>
+              <span class="fresh-body">
+                <span class="no">{item.issue} / {formatRubric(item.rubrics[0])}</span>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+                <span class="go">читать <span class="arrow-icon" aria-hidden="true"></span></span>
+              </span>
             </a>
           ))}
         </div>
@@ -1565,7 +2163,7 @@ body.menu-open .mobile-panel{
     </section>
   </main>
 
-  <footer class="foot" id="about"><div class="foot-inner"><h2 class="foot-title">In Incerto we Trust</h2><a class="foot-cta" href="https://t.me/klb_clb" target="_blank" rel="noopener">Подписаться @klb_clb <span class="arrow-icon" aria-hidden="true"></span></a><div class="foot-meta"><div class="foot-credits"><p>© <a href="https://www.google.com/search?q=%D0%9D%D0%B8%D0%BA%D0%B8%D1%82%D0%B0+%D0%9A%D0%BE%D0%BB%D0%B1%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9" target="_blank" rel="noopener">Никита Колбовский</a> 2026. Все права защищены</p><p>Разработка: <a href="https://kolbovskiy.com" target="_blank" rel="noopener">kolbovskiy.com</a></p></div><span class="age-mark">18+</span></div><div class="foot-bottom"><span>KOLBOVSKIY.CLUB</span><a href="/rss.xml">RSS</a></div></div></footer>
+  <footer class="foot" id="about"><div class="foot-inner"><h2 class="foot-title">In Incerto we Trust</h2><a class="foot-cta" href="https://t.me/klb_clb" target="_blank" rel="noopener">Подписаться @klb_clb <span class="arrow-icon" aria-hidden="true"></span></a><div class="foot-meta"><div class="foot-credits"><p>© <a href="https://www.google.com/search?q=%D0%9D%D0%B8%D0%BA%D0%B8%D1%82%D0%B0+%D0%9A%D0%BE%D0%BB%D0%B1%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9" target="_blank" rel="noopener">Никита Колбовский</a> 2026. Все права защищены</p><p>Разработка: <a href="https://kolbovskiy.com" target="_blank" rel="noopener">kolbovskiy.com</a></p></div><span class="age-mark">18+</span></div><div class="foot-bottom"><span>KOLBOVSKIY.CLUB</span><a href="/rss/">RSS</a></div></div></footer>
 
   <script>
     (function(){
@@ -1576,7 +2174,52 @@ body.menu-open .mobile-panel{
       const mobileSearchOpen = document.getElementById('mobileSearchOpen');
       const searchClose = document.getElementById('searchClose');
       const searchInput = document.getElementById('searchInput');
+      const searchResults = document.getElementById('searchResults');
+      const searchIndexNode = document.getElementById('searchIndex');
       const fill = document.getElementById('progressFill');
+      let searchItems = [];
+
+      try {
+        searchItems = searchIndexNode ? JSON.parse(searchIndexNode.textContent || '[]') : [];
+      } catch {
+        searchItems = [];
+      }
+
+      function escapeHtml(value){
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function normalizeSearch(value){
+        return String(value || '').trim().toLowerCase().replace(/ё/g, 'е');
+      }
+
+      function renderSearch(query = ''){
+        if(!searchResults) return;
+
+        const normalized = normalizeSearch(query);
+        const pool = normalized
+          ? searchItems.filter(item => normalizeSearch(item.haystack).includes(normalized)).slice(0, 8)
+          : searchItems.slice(0, 5);
+
+        if(!pool.length){
+          searchResults.innerHTML = '<div class="search-empty">ничего не найдено · попробуй другой сигнал</div>';
+          return;
+        }
+
+        searchResults.innerHTML = pool.map(item => `
+          <a class="search-result" href="${escapeHtml(item.href)}">
+            <span>${escapeHtml(item.issue)}</span>
+            <span class="rub">${escapeHtml(item.rubric)}</span>
+            <b>${escapeHtml(item.label)}</b>
+            <span class="go"><span class="search-triangle" aria-hidden="true"></span></span>
+          </a>
+        `).join('');
+      }
       let navRevealTimer;
 
       function closeMenu(){
@@ -1586,6 +2229,7 @@ body.menu-open .mobile-panel{
         if(event) event.preventDefault();
         closeMenu();
         body.classList.add('search-open');
+        renderSearch(searchInput ? searchInput.value : '');
         window.setTimeout(() => searchInput && searchInput.focus(), 60);
       }
       function closeSearch(){ body.classList.remove('search-open'); }
@@ -1641,6 +2285,8 @@ body.menu-open .mobile-panel{
       if(searchOpen){ searchOpen.addEventListener('click', openSearch); }
       if(mobileSearchOpen){ mobileSearchOpen.addEventListener('click', openSearch); }
       if(searchClose){ searchClose.addEventListener('click', closeSearch); }
+      if(searchInput){ searchInput.addEventListener('input', () => renderSearch(searchInput.value)); }
+      renderSearch('');
       window.addEventListener('keydown', event => {
         if(event.key === 'Escape'){
           closeMenu();
