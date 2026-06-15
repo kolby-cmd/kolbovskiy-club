@@ -284,5 +284,37 @@ const navItems = [
       background:#F0EDE6!important;
     }
 
+
+  /* MOBILE PANEL CLOSED-STATE ISOLATION
+     Closed menu is not a red fixed layer anymore; WebView has nothing red to flash during scroll. */
+    @media(max-width:760px){
+      .mobile-panel{
+        transform:none!important;
+        clip-path:inset(0 0 100% 0)!important;
+        opacity:0!important;
+        visibility:hidden!important;
+        pointer-events:none!important;
+        background:transparent!important;
+        transition:
+          clip-path var(--motion-panel) var(--ease),
+          opacity 1ms linear var(--motion-panel),
+          visibility 0s linear var(--motion-panel)!important;
+        will-change:clip-path,opacity!important;
+      }
+
+      body.menu-open .mobile-panel{
+        transform:none!important;
+        clip-path:inset(0 0 0 0)!important;
+        opacity:1!important;
+        visibility:visible!important;
+        pointer-events:auto!important;
+        background:var(--red)!important;
+        transition:
+          clip-path var(--motion-panel) var(--ease),
+          opacity 1ms linear,
+          visibility 0s linear!important;
+      }
+    }
+
 </style>
 
