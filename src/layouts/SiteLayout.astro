@@ -57,6 +57,7 @@ const searchSuggestions = searchIndex.slice(0, 5);
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#F0EDE6" />
   <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>{title}</title>
@@ -185,6 +186,7 @@ const searchSuggestions = searchIndex.slice(0, 5);
     .foot-title,.mobile-panel nav a{font-family:var(--font-display)!important;text-shadow:none!important;-webkit-text-stroke:0!important;filter:none!important;-webkit-font-smoothing:antialiased}
 
     @media(max-width:760px){.plain-page{--plain-header:56px;padding:calc(var(--plain-header) + 58px) var(--pad) 88px}.plain-title{font-size:clamp(54px,17vw,96px);margin-bottom:30px}.plain-kicker{font-size:10px;letter-spacing:.14em;margin-bottom:24px}.foot{min-height:0;padding:44px var(--pad) 0}.foot-title{font-size:clamp(48px,15vw,86px);max-width:none;margin-bottom:18px}.foot-cta{margin-bottom:30px}.foot-meta{grid-template-columns:1fr auto;gap:22px;padding-bottom:22px}.foot-credits{font-size:10px}.age-mark{font-size:18px}.foot-bottom{grid-template-columns:1fr auto;gap:24px;height:auto;padding:16px 0}.foot-bottom-links{display:none}}
+      html,body{background:var(--white)}
   </style>
   <slot name="pageStyles" />
 </head>
