@@ -285,16 +285,18 @@ const navItems = [
     }
 
 
-  /* MOBILE PANEL HEIGHT REVEAL
-     Text and red background reveal as one clipped block; no separate opacity/clip desync. */
+  /* MOBILE PANEL SAFE HEIGHT REVEAL
+     Closed state is transparent and zero-height; open state becomes red and expands downward.
+     No translateY, no clip-path, no opacity/visibility desync. */
     @media(max-width:760px){
       .mobile-panel{
+        top:56px!important;
         transform:none!important;
         clip-path:none!important;
         opacity:1!important;
         visibility:visible!important;
         pointer-events:none!important;
-        background:var(--red)!important;
+        background:transparent!important;
         max-height:0!important;
         padding-top:0!important;
         padding-bottom:0!important;
@@ -309,9 +311,11 @@ const navItems = [
       }
 
       body.menu-open .mobile-panel{
+        top:56px!important;
         transform:none!important;
         clip-path:none!important;
         pointer-events:auto!important;
+        background:var(--red)!important;
         max-height:calc(100dvh - 56px)!important;
         padding-top:32px!important;
         padding-bottom:38px!important;
