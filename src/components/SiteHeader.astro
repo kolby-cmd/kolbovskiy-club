@@ -286,8 +286,8 @@ const navItems = [
 
 
   /* MOBILE PANEL SAFE HEIGHT REVEAL
-     Closed state is transparent and zero-height; open state becomes red and expands downward.
-     No translateY, no clip-path, no opacity/visibility desync. */
+     Closed state is zero-height and transparent, including inner text layers.
+     Open state turns red and reveals background + text together downward. */
     @media(max-width:760px){
       .mobile-panel{
         top:56px!important;
@@ -306,8 +306,18 @@ const navItems = [
           max-height var(--motion-panel) var(--ease),
           padding-top var(--motion-panel) var(--ease),
           padding-bottom var(--motion-panel) var(--ease),
-          border-color var(--motion-panel) var(--ease)!important;
+          border-color var(--motion-panel) var(--ease),
+          background-color 1ms linear var(--motion-panel)!important;
         will-change:max-height,padding-top,padding-bottom!important;
+      }
+
+      .mobile-panel-inner,
+      .mobile-panel nav,
+      .mobile-panel .mobile-small{
+        max-height:0!important;
+        overflow:hidden!important;
+        visibility:hidden!important;
+        pointer-events:none!important;
       }
 
       body.menu-open .mobile-panel{
@@ -321,6 +331,21 @@ const navItems = [
         padding-bottom:38px!important;
         overflow:auto!important;
         border-bottom-color:var(--black)!important;
+        transition:
+          max-height var(--motion-panel) var(--ease),
+          padding-top var(--motion-panel) var(--ease),
+          padding-bottom var(--motion-panel) var(--ease),
+          border-color var(--motion-panel) var(--ease),
+          background-color 1ms linear!important;
+      }
+
+      body.menu-open .mobile-panel-inner,
+      body.menu-open .mobile-panel nav,
+      body.menu-open .mobile-panel .mobile-small{
+        max-height:none!important;
+        overflow:visible!important;
+        visibility:visible!important;
+        pointer-events:auto!important;
       }
     }
 
