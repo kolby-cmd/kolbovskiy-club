@@ -285,34 +285,38 @@ const navItems = [
     }
 
 
-  /* MOBILE PANEL CLOSED-STATE ISOLATION
-     Closed menu is not a red fixed layer anymore; WebView has nothing red to flash during scroll. */
+  /* MOBILE PANEL HEIGHT REVEAL
+     Text and red background reveal as one clipped block; no separate opacity/clip desync. */
     @media(max-width:760px){
       .mobile-panel{
         transform:none!important;
-        clip-path:inset(0 0 100% 0)!important;
-        opacity:0!important;
-        visibility:hidden!important;
+        clip-path:none!important;
+        opacity:1!important;
+        visibility:visible!important;
         pointer-events:none!important;
-        background:transparent!important;
+        background:var(--red)!important;
+        max-height:0!important;
+        padding-top:0!important;
+        padding-bottom:0!important;
+        overflow:hidden!important;
+        border-bottom-color:transparent!important;
         transition:
-          clip-path var(--motion-panel) var(--ease),
-          opacity 1ms linear var(--motion-panel),
-          visibility 0s linear var(--motion-panel)!important;
-        will-change:clip-path,opacity!important;
+          max-height var(--motion-panel) var(--ease),
+          padding-top var(--motion-panel) var(--ease),
+          padding-bottom var(--motion-panel) var(--ease),
+          border-color var(--motion-panel) var(--ease)!important;
+        will-change:max-height,padding-top,padding-bottom!important;
       }
 
       body.menu-open .mobile-panel{
         transform:none!important;
-        clip-path:inset(0 0 0 0)!important;
-        opacity:1!important;
-        visibility:visible!important;
+        clip-path:none!important;
         pointer-events:auto!important;
-        background:var(--red)!important;
-        transition:
-          clip-path var(--motion-panel) var(--ease),
-          opacity 1ms linear,
-          visibility 0s linear!important;
+        max-height:calc(100dvh - 56px)!important;
+        padding-top:32px!important;
+        padding-bottom:38px!important;
+        overflow:auto!important;
+        border-bottom-color:var(--black)!important;
       }
     }
 
