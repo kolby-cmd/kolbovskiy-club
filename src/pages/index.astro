@@ -2012,15 +2012,23 @@ body.menu-open .mobile-panel{
         display:none!important;
       }
     }
-    /* INDEX MOBILE EXPOSED TOP STRIP
-       Exposed iPhone/WebView strip above the site uses the same color as the mobile menu. */
+
+
+    /* MOBILE HEADER TOP SEAL
+       Covers the exposed iOS/Telegram strip above the sticky header with exact menu color.
+       No body/html repaint, no menu hiding, no Telegram detection. */
     @media(max-width:760px){
-      html{
-        background:#F0EDE6!important;
-        background-color:#F0EDE6!important;
-      }
-      body{
-        background:var(--white);
+      .site-header::before{
+        content:"";
+        position:absolute;
+        left:0;
+        right:0;
+        top:-96px;
+        height:96px;
+        background:#F0EDE6;
+        background-color:#F0EDE6;
+        pointer-events:none;
+        z-index:2;
       }
     }
 
