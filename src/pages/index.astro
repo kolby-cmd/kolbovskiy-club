@@ -155,7 +155,7 @@ const rubricCards = rubricConfigs
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#E6E2D6" />
+  <meta name="theme-color" content="#0A0A09" />
   <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
@@ -942,11 +942,7 @@ const rubricCards = rubricConfigs
     }
 
     @media(max-width:760px){
-      .menu-open .site-header,
-      .menu-open .topbar{
-        background:rgba(240,237,230,.96)!important;
-      }
-      .menu-open .topbar{
+.menu-open .topbar{
         border-bottom-color:var(--line)!important;
       }
       .hero-title-rail{
@@ -982,6 +978,10 @@ const rubricCards = rubricConfigs
     /* AUDIT PASS 25 — INDEX MICROFIXES
        Mobile menu safe-area, hero rail length, archive/best triangle animation lock. */
     @media(max-width:760px){
+body.menu-open .mobile-panel{
+        background:var(--red)!important;
+      }
+
       .hero-title-row{
         align-items:start!important;
         line-height:.78!important;
@@ -2010,6 +2010,19 @@ const rubricCards = rubricConfigs
       }
       :global(.search-panel .search-result .rub){
         display:none!important;
+      }
+    }
+
+
+    /* INDEX MOBILE EXPOSED TOP STRIP
+       Only the exposed iPhone/WebView strip above the site is black, not cream. */
+    @media(max-width:760px){
+      html{
+        background:var(--black)!important;
+        background-color:var(--black)!important;
+      }
+      body{
+        background:var(--white);
       }
     }
 
