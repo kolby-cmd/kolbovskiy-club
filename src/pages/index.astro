@@ -2014,21 +2014,13 @@ body.menu-open .mobile-panel{
     }
 
 
-    /* MOBILE HEADER TOP SEAL
-       Covers the exposed iOS/Telegram strip above the sticky header with exact menu color.
-       No body/html repaint, no menu hiding, no Telegram detection. */
+    /* MOBILE WEBVIEW CANVAS COLOR
+       Paints exposed Telegram/iOS browser canvas with exact menu color.
+       No pseudo-elements, no menu hiding, no body repaint. */
     @media(max-width:760px){
-      .site-header::before{
-        content:"";
-        position:absolute;
-        left:0;
-        right:0;
-        top:-96px;
-        height:96px;
-        background:#F0EDE6;
-        background-color:#F0EDE6;
-        pointer-events:none;
-        z-index:2;
+      html{
+        background:#F0EDE6!important;
+        background-color:#F0EDE6!important;
       }
     }
 
