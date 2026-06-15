@@ -254,5 +254,35 @@ const navItems = [
       background:var(--red)!important;
     }
 
+
+  /* TELEGRAM HEADER UPWARD SEAL
+     Paints only the area ABOVE the sticky header, without leaking below the menu. */
+    .site-header{
+      background:#F0EDE6!important;
+      overflow:visible!important;
+    }
+
+    .site-header::before{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:-96px;
+      height:96px;
+      background:#F0EDE6;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .topbar{
+      position:relative;
+      z-index:3;
+      background:#F0EDE6!important;
+    }
+
+    .nav-row{
+      background:#F0EDE6!important;
+    }
+
 </style>
 

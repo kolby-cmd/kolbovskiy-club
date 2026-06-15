@@ -1938,30 +1938,6 @@ const rubricCards = rubricConfigs
       transform:translateY(-3px)!important;
       box-shadow:0 3px 0 0 var(--black)!important;
     }
-
-
-    /* TELEGRAM WEBVIEW TOP SAFE-AREA SEAL
-       Real fixed layer above the document, shared color with menu chrome. */
-    html{
-      background:#F0EDE6;
-    }
-
-    body::before{
-      content:"";
-      position:fixed;
-      left:0;
-      right:0;
-      top:0;
-      height:max(72px,env(safe-area-inset-top));
-      background:#F0EDE6;
-      z-index:90;
-      pointer-events:none;
-    }
-
-    .site-header{
-      z-index:100;
-    }
-
 </style>
 </head>
 <body>
