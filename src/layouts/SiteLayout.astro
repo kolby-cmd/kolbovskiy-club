@@ -57,7 +57,6 @@ const searchSuggestions = searchIndex.slice(0, 5);
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#F0EDE6" />
   <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>{title}</title>
@@ -249,13 +248,21 @@ const searchSuggestions = searchIndex.slice(0, 5);
     @media(max-width:760px){:root{--pad:20px;--col:min(680px,calc(100vw - 40px))}.topbar{grid-template-columns:auto 1fr auto;height:56px;padding:0 var(--pad)}.site-header,.nav-row-hidden .site-header{height:56px}.brand-logo{justify-self:start}.logo-img{width:min(184px,50vw)}.top-left{display:none}.top-right{justify-self:end;gap:0}.skull{width:26px;height:26px}.tg-link,.search-inline{display:none}.mobile-menu-toggle{display:flex;justify-content:flex-end}.nav-row{display:none}.mobile-panel{top:56px;max-height:calc(100dvh - 56px)}.mobile-panel-inner{width:100%;margin:0}.progress{top:56px}.search-panel{padding:28px var(--pad)}.search-box{width:100%;max-width:none;margin:0}.search-result{grid-template-columns:52px 1fr 24px}.search-result .rub{display:none}.plain-page{--plain-header:56px;padding:calc(var(--plain-header) + 58px) var(--pad) 88px}.plain-title{font-size:clamp(54px,17vw,96px);margin-bottom:30px}.plain-kicker{font-size:10px;letter-spacing:.14em;margin-bottom:24px}.foot{min-height:0;padding:44px var(--pad) 0}.foot-title{font-size:clamp(48px,15vw,86px);max-width:none;margin-bottom:18px}.foot-cta{margin-bottom:30px}.foot-meta{grid-template-columns:1fr auto;gap:22px;padding-bottom:22px}.foot-credits{font-size:10px}.age-mark{font-size:18px}.foot-bottom{grid-template-columns:1fr auto;gap:24px;height:auto;padding:16px 0}.foot-bottom-links{display:none}}
 
 
-    /* MOBILE WEBVIEW CANVAS COLOR
-       Paints exposed Telegram/iOS browser canvas with exact menu color.
-       No pseudo-elements, no menu hiding, no body repaint. */
+    /* MOBILE HEADER TOP SEAL
+       Covers the exposed iOS/Telegram strip above the sticky header with exact menu color.
+       No body/html repaint, no menu hiding, no Telegram detection. */
     @media(max-width:760px){
-      html{
-        background:#F0EDE6!important;
-        background-color:#F0EDE6!important;
+      .site-header::before{
+        content:"";
+        position:absolute;
+        left:0;
+        right:0;
+        top:-96px;
+        height:96px;
+        background:#F0EDE6;
+        background-color:#F0EDE6;
+        pointer-events:none;
+        z-index:2;
       }
     }
 
